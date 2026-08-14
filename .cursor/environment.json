@@ -1,0 +1,17 @@
+{
+  "name": "Remotion Code Hike",
+  "install": "npm install && npx remotion browser ensure",
+  "terminals": [
+    {
+      "name": "Remotion Studio",
+      "command": "npx remotion studio",
+      "description": "Remotion Studio dev server for previewing and editing the Code Hike video. Serves the studio UI at http://localhost:3000."
+    }
+  ],
+  "ports": [
+    {
+      "name": "Remotion Studio",
+      "port": 3000
+    }
+  ]
+}
