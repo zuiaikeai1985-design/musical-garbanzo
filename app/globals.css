@@ -24,8 +24,8 @@
   --color-cinnabar-deep: var(--cinnabar-deep);
   --color-gold: var(--gold);
   --color-card: var(--card);
-  --font-serif: "Noto Serif SC", "Songti SC", serif;
-  --font-sans: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-serif: var(--font-noto-serif), "Noto Serif SC", "Songti SC", serif;
+  --font-sans: var(--font-noto-sans), "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
 html,
