@@ -9,7 +9,9 @@ npm install
 npm run dev
 ```
 
-打开 [http://localhost:3000](http://localhost:3000)。
+在**你自己的电脑**上打开 [http://localhost:3000](http://localhost:3000)。
+
+这个地址只在运行 `npm run dev` 的那台电脑上有效。云端对话里的 `localhost` 打不开你本机的浏览器。
 
 ## 怎么用
 
