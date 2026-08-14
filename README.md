@@ -1,63 +1,33 @@
-# Remotion video
+# 画语
 
-<p align="center">
-  <a href="https://github.com/remotion-dev/logo">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://github.com/remotion-dev/logo/raw/main/animated-logo-banner-dark.apng">
-      <img alt="Animated Remotion Logo" src="https://github.com/remotion-dev/logo/raw/main/animated-logo-banner-light.gif">
-    </picture>
-  </a>
-</p>
+上传一张图，反推出可直接使用的中文和英文提示词。
 
-Welcome to your Remotion project!
+## 本地运行
 
-## Commands
-
-**Install Dependencies**
-
-```console
-npm i
-```
-
-**Start Preview**
-
-```console
+```bash
+npm install
 npm run dev
 ```
 
-**Change code snippets**
+打开 [http://localhost:3000](http://localhost:3000)。
 
-The snippets are located in the `public` folder.  
-Change the code or create new files in there.
+## 怎么用
 
-**Render video**
+1. 上传或拖入一张图片
+2. 选择输出风格：双语、中文详细、Midjourney、Flux、Stable Diffusion
+3. 在右上角「设置」里填入能看图的模型 API Key
+4. 点击「反推提示词」
 
-```console
-npx remotion render
+Key 只保存在浏览器本地。也可以改用兼容 OpenAI 接口的服务，例如硅基流动、通义。
+
+## 服务器环境变量（可选）
+
+复制 `.env.example` 为 `.env.local`：
+
+```
+OPENAI_API_KEY=
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_MODEL=gpt-4o-mini
 ```
 
-**Upgrade Remotion**
-
-```console
-npx remotion upgrade
-```
-
-## More examples
-
-Visit the [Code Hike examples](https://github.com/code-hike/examples/tree/main/with-remotion) for more variants of code animations.
-
-## Docs
-
-Get started with Remotion by reading the [fundamentals page](https://www.remotion.dev/docs/the-fundamentals).
-
-## Help
-
-We provide help on our [Discord server](https://discord.gg/6VzzNDwUwV).
-
-## Issues
-
-Found an issue with Remotion? [File an issue here](https://github.com/remotion-dev/remotion/issues/new).
-
-## License
-
-Note that for some entities a company license is needed. [Read the terms here](https://github.com/remotion-dev/remotion/blob/main/LICENSE.md).
+配置后，即使用户没有在页面里填 Key，也可以走服务器上的密钥。

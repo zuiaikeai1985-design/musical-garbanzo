@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #f4efe4;
+  --paper-deep: #ebe3d2;
+  --ink: #1c1915;
+  --ink-soft: #3d3830;
+  --muted: #7a7266;
+  --line: #d8cfc0;
+  --cinnabar: #c23a2b;
+  --cinnabar-deep: #9e2d21;
+  --gold: #b8893a;
+  --card: #fffaf1;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-deep: var(--paper-deep);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-cinnabar: var(--cinnabar);
+  --color-cinnabar-deep: var(--cinnabar-deep);
+  --color-gold: var(--gold);
+  --color-card: var(--card);
+  --font-serif: "Noto Serif SC", "Songti SC", serif;
+  --font-sans: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(194, 58, 43, 0.06), transparent 50%),
+    radial-gradient(900px 500px at 100% 0%, rgba(184, 137, 58, 0.08), transparent 45%),
+    var(--paper);
+  color: var(--ink);
+}
+
+body::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  opacity: 0.18;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+
+::selection {
+  background: rgba(194, 58, 43, 0.18);
+}
+
+.font-serif {
+  font-family: var(--font-serif);
+}
+
+.seal {
+  width: 52px;
+  height: 52px;
+  border: 2px solid var(--cinnabar);
+  color: var(--cinnabar);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-serif), serif;
+  font-size: 22px;
+  letter-spacing: 0.08em;
+  transform: rotate(-8deg);
+  box-shadow: inset 0 0 0 1px rgba(194, 58, 43, 0.35);
+}
+
+.dropzone {
+  background-image:
+    linear-gradient(to right, rgba(194, 58, 43, 0.18) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(194, 58, 43, 0.18) 1px, transparent 1px);
+  background-size: 18px 18px;
+  background-position: center;
+}
+
+@keyframes ink-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.ink-pulse {
+  animation: ink-pulse 1.4s ease-in-out infinite;
+}
