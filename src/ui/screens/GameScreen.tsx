@@ -1,12 +1,28 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLanguage } from "../hooks/useLanguage";
+import { TICK_MS } from "../../engine/constants";
+import { Game } from "../../engine/game";
 import type { Difficulty } from "../../engine/types";
+import { m01IronCurtain } from "../../maps/m01-iron-curtain";
+import { Camera } from "../../render/camera";
+import { Minimap } from "../../render/minimap";
+import { Renderer } from "../../render/renderer";
+import { SpriteAtlas } from "../../render/sprites/atlas";
+import { GameController, type CursorKind } from "../../input/controls";
+import { installTestBridge, removeTestBridge } from "../testBridge";
+import { Loading } from "./Loading";
 import "./GameScreen.css";
 
-/**
- * Phase 0 placeholder: hosts the battlefield canvas and wires up resizing.
- * The renderer, HUD and input layers are attached here in later phases.
- */
+const MAX_CATCHUP_TICKS = 5;
+
+interface Engine {
+  game: Game;
+  camera: Camera;
+  renderer: Renderer;
+  minimap: Minimap;
+  controller: GameController;
+}
+
 export function GameScreen({
   difficulty,
   onExit,
@@ -14,72 +30,187 @@ export function GameScreen({
   difficulty: Difficulty;
   onExit: () => void;
 }) {
-  const { t } = useLanguage();
+  const { t, toggleLang } = useLanguage();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const minimapRef = useRef<HTMLCanvasElement | null>(null);
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const engineRef = useRef<Engine | null>(null);
+
+  const [progress, setProgress] = useState({ fraction: 0, label: "" });
+  const [ready, setReady] = useState(false);
+  const [cursor, setCursor] = useState<CursorKind>("default");
+  const [hud, setHud] = useState({ credits: 0, power: 0, drain: 0, units: 0 });
+
+  const handleHotkey = useCallback(
+    (key: string) => {
+      if (key === "l") toggleLang();
+      if (key === "escape") onExit();
+    },
+    [onExit, toggleLang],
+  );
+  const hotkeyRef = useRef(handleHotkey);
+  hotkeyRef.current = handleHotkey;
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    const wrap = wrapRef.current;
-    if (!canvas || !wrap) return;
-
-    const resize = () => {
-      const rect = wrap.getBoundingClientRect();
-      canvas.width = Math.max(1, Math.floor(rect.width));
-      canvas.height = Math.max(1, Math.floor(rect.height));
-    };
-    resize();
-
-    const ro = new ResizeObserver(resize);
-    ro.observe(wrap);
-
+    let cancelled = false;
     let raf = 0;
-    const startedAt = performance.now();
-    const loop = (now: number) => {
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        const time = (now - startedAt) / 1000;
-        ctx.imageSmoothingEnabled = false;
-        ctx.fillStyle = "#1d2a16";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        // Placeholder grid so we can confirm the canvas is live and sized correctly.
-        ctx.strokeStyle = "rgba(255,255,255,0.05)";
-        ctx.lineWidth = 1;
-        for (let x = 0; x < canvas.width; x += 48) {
-          ctx.beginPath();
-          ctx.moveTo(x + 0.5, 0);
-          ctx.lineTo(x + 0.5, canvas.height);
-          ctx.stroke();
-        }
-        for (let y = 0; y < canvas.height; y += 48) {
-          ctx.beginPath();
-          ctx.moveTo(0, y + 0.5);
-          ctx.lineTo(canvas.width, y + 0.5);
-          ctx.stroke();
-        }
-        const pulse = 0.5 + 0.5 * Math.sin(time * 3);
-        ctx.fillStyle = `rgba(192,36,42,${0.25 + pulse * 0.35})`;
-        ctx.fillRect(canvas.width / 2 - 60, canvas.height / 2 - 60, 120, 120);
+
+    const boot = async () => {
+      const atlas = await SpriteAtlas.build((fraction, label) => {
+        if (!cancelled) setProgress({ fraction, label });
+      });
+      if (cancelled) return;
+
+      const canvas = canvasRef.current;
+      const viewport = viewportRef.current;
+      if (!canvas || !viewport) return;
+
+      const game = new Game(m01IronCurtain, difficulty);
+      const camera = new Camera(game.world.grid.worldWidth, game.world.grid.worldHeight);
+      const renderer = new Renderer(game.world, atlas);
+      const minimap = new Minimap(game.world);
+      const controller = new GameController(canvas, game, camera, {
+        onCursorChanged: setCursor,
+        onHotkey: (key) => hotkeyRef.current(key),
+      });
+
+      const resize = () => {
+        const rect = viewport.getBoundingClientRect();
+        canvas.width = Math.max(1, Math.floor(rect.width));
+        canvas.height = Math.max(1, Math.floor(rect.height));
+        camera.setViewport(canvas.width, canvas.height);
+      };
+      resize();
+      const observer = new ResizeObserver(resize);
+      observer.observe(viewport);
+
+      // Open on the player's Construction Yard rather than a hard-coded tile.
+      const home = game.world.structures.find(
+        (s) => s.side === game.world.humanSide && s.kind === "conyard",
+      );
+      if (home) {
+        const c = game.world.structureCenter(home);
+        camera.centerOn(c.x + 48, c.y + 48);
+      } else {
+        camera.centerOnTile(m01IronCurtain.cameraStart.tx, m01IronCurtain.cameraStart.ty);
       }
-      raf = requestAnimationFrame(loop);
+      controller.attach();
+      engineRef.current = { game, camera, renderer, minimap, controller };
+      installTestBridge(game, camera);
+      setReady(true);
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      let last = performance.now();
+      let accumulator = 0;
+      let hudTimer = 0;
+
+      const frame = (now: number) => {
+        const dtMs = Math.min(250, now - last);
+        last = now;
+        const dt = dtMs / 1000;
+
+        controller.update(dt, true);
+
+        accumulator += dtMs;
+        let steps = 0;
+        while (accumulator >= TICK_MS && steps < MAX_CATCHUP_TICKS) {
+          game.tick();
+          accumulator -= TICK_MS;
+          steps++;
+        }
+        if (steps === MAX_CATCHUP_TICKS) accumulator = 0;
+
+        // Drain engine output so the queues do not grow without bound.
+        const world = game.world;
+        if (world.dirtyTiles.length > 0) {
+          for (const index of world.dirtyTiles) {
+            renderer.terrain.invalidateTile(index % world.grid.width, Math.floor(index / world.grid.width));
+          }
+          world.dirtyTiles.length = 0;
+          minimap.invalidate();
+        }
+        world.events.length = 0;
+
+        const alpha = accumulator / TICK_MS;
+        renderer.draw(ctx, camera, alpha, controller.overlay, world.tick);
+
+        const mini = minimapRef.current;
+        if (mini) minimap.draw(mini, camera, false);
+
+        hudTimer += dtMs;
+        if (hudTimer > 120) {
+          hudTimer = 0;
+          const player = world.players[world.humanSide];
+          setHud({
+            credits: Math.floor(player.credits),
+            power: player.powerProduced,
+            drain: player.powerConsumed,
+            units: world.units.filter((u) => u.side === world.humanSide).length,
+          });
+        }
+
+        raf = requestAnimationFrame(frame);
+      };
+      raf = requestAnimationFrame(frame);
+
+      return () => observer.disconnect();
     };
-    raf = requestAnimationFrame(loop);
+
+    const cleanupPromise = boot();
 
     return () => {
+      cancelled = true;
       cancelAnimationFrame(raf);
-      ro.disconnect();
+      engineRef.current?.controller.detach();
+      engineRef.current = null;
+      removeTestBridge();
+      void cleanupPromise;
     };
-  }, []);
+  }, [difficulty]);
+
+  const onMinimapClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const engine = engineRef.current;
+    const canvas = minimapRef.current;
+    if (!engine || !canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const point = engine.minimap.canvasToWorld(
+      canvas,
+      ((e.clientX - rect.left) / rect.width) * canvas.width,
+      ((e.clientY - rect.top) / rect.height) * canvas.height,
+    );
+    if (point) engine.camera.centerOn(point.x, point.y);
+  };
 
   return (
     <div className="game-root">
-      <div className="game-viewport" ref={wrapRef}>
-        <canvas ref={canvasRef} data-testid="battlefield" />
+      <div className="game-viewport" ref={viewportRef}>
+        <canvas ref={canvasRef} data-testid="battlefield" data-cursor={cursor} />
+        {!ready && <Loading fraction={progress.fraction} label={progress.label} />}
       </div>
+
       <aside className="game-sidebar" data-testid="sidebar">
-        <div className="sidebar-slot">{t.hudCredits}</div>
-        <div className="sidebar-slot">{t.hudPower}</div>
-        <div className="sidebar-slot">{difficulty}</div>
+        <canvas
+          ref={minimapRef}
+          className="sidebar-radar"
+          width={216}
+          height={216}
+          onClick={onMinimapClick}
+          data-testid="minimap"
+        />
+        <div className="sidebar-readout">
+          <span className="readout-label">{t.hudCredits}</span>
+          <span className="readout-value" data-testid="credits">
+            ${hud.credits}
+          </span>
+        </div>
+        <div className="sidebar-readout">
+          <span className="readout-label">{t.hudPower}</span>
+          <span className="readout-value">
+            {hud.power} / {hud.drain}
+          </span>
+        </div>
         <button className="sidebar-exit" onClick={onExit} data-testid="exit">
           {t.abort}
         </button>

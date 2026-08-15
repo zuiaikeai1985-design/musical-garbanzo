@@ -15,6 +15,28 @@
 .game-viewport canvas {
   position: absolute;
   inset: 0;
+  cursor: default;
+}
+
+/* Contextual cursors, mirroring the original's arrow / move / crosshair set. */
+.game-viewport canvas[data-cursor="move"] {
+  cursor: cell;
+}
+.game-viewport canvas[data-cursor="attack"] {
+  cursor: crosshair;
+}
+.game-viewport canvas[data-cursor="harvest"] {
+  cursor: grab;
+}
+.game-viewport canvas[data-cursor="select"] {
+  cursor: pointer;
+}
+.game-viewport canvas[data-cursor="noEntry"] {
+  cursor: not-allowed;
+}
+.game-viewport canvas[data-cursor="sell"],
+.game-viewport canvas[data-cursor="repair"] {
+  cursor: copy;
 }
 
 .game-sidebar {
@@ -28,18 +50,45 @@
   box-shadow: inset 2px 0 0 #6b5744;
 }
 
-.sidebar-slot {
-  padding: 8px;
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  color: var(--ra-text-dim);
+.sidebar-radar {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  background: #07090c;
+  border: 2px solid #0c0806;
+  box-shadow: inset 1px 1px 0 #3a2e24;
+  cursor: pointer;
+}
+
+.sidebar-readout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 8px;
   background: #14100c;
   border: 2px solid #0c0806;
   box-shadow: inset 1px 1px 0 #3a2e24;
 }
 
-html[data-lang="zh"] .sidebar-slot {
-  font-size: 13px;
+.readout-label {
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  color: var(--ra-text-dim);
+}
+
+.readout-value {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--ra-green);
+}
+
+html[data-lang="zh"] .readout-label {
+  font-size: 12px;
+}
+
+html[data-lang="zh"] .readout-value {
+  font-size: 14px;
 }
 
 .sidebar-exit {

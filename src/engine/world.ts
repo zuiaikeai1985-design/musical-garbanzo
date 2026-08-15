@@ -78,6 +78,12 @@ export class World {
   readonly events: EngineEvent[] = [];
   readonly evaLog: EvaEntry[] = [];
 
+  /**
+   * Tiles whose appearance changed this tick (ore mined, crater, structure placed).
+   * The renderer drains this to re-bake only the affected terrain chunks.
+   */
+  readonly dirtyTiles: number[] = [];
+
   pendingNuke: PendingNuke | null = null;
   /** Set while a Missile Silo is charged and the player is choosing a target. */
   nukeReadySilo: EntityId = 0;
@@ -190,6 +196,7 @@ export class World {
     this.structures.push(structure);
     this.structureById.set(structure.id, structure);
     this.grid.occupy(tx, ty, def.w, def.h, structure.id);
+    this.markTilesDirty(tx, ty, def.w, def.h);
     this.events.push({ type: "structureCreated", id: structure.id, kind, side, tx, ty });
     return structure;
   }
@@ -203,6 +210,15 @@ export class World {
       }
     }
     return true;
+  }
+
+  /** Flags a rectangle of tiles as visually stale so the renderer re-bakes its chunks. */
+  markTilesDirty(tx: number, ty: number, w = 1, h = 1): void {
+    for (let y = ty; y < ty + h; y++) {
+      for (let x = tx; x < tx + w; x++) {
+        if (this.grid.inBounds(x, y)) this.dirtyTiles.push(this.grid.index(x, y));
+      }
+    }
   }
 
   spawnEffect(
