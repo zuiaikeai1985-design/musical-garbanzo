@@ -120,7 +120,7 @@ export function aiSystem(world: World): void {
  * the micro-management, and difficulty becomes impossible to tune.
  */
 function applyIncomeBonus(world: World, ai: AiState): void {
-  const bonus = 3 * ai.config.incomeMultiplier * ai.tuning.income * (AI_THINK_INTERVAL / 30);
+  const bonus = 2 * ai.config.incomeMultiplier * ai.tuning.income * (AI_THINK_INTERVAL / 30);
   world.addCredits(ai.side, bonus);
 }
 
@@ -281,7 +281,7 @@ const ARMY_MIX: readonly { kind: UnitKindId; weight: number }[] = [
 
 function manageArmy(world: World, ai: AiState): void {
   const player = world.players[ai.side];
-  const targetStrength = waveStrength(ai) * 1.6;
+  const targetStrength = waveStrength(ai) * 1.35;
   // Count what is already on order as well as what is on the field. Without this the AI keeps
   // queueing every think-tick until the units finally roll out, and the "first wave" arrives
   // three times the intended size.

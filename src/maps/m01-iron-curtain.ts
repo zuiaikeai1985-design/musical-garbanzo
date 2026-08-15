@@ -26,7 +26,7 @@ export const m01IronCurtain: MissionDef = {
     waveInterval: 150 * 30,
     minWaveInterval: 50 * 30,
     firstWaveStrength: 1100,
-    waveStrengthGrowth: 450,
+    waveStrengthGrowth: 300,
     maxHarvesters: 3,
   },
   build(world: World) {
