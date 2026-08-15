@@ -1,7 +1,14 @@
 node_modules
 dist
+dist-ssr
 .DS_Store
 .env
+*.local
 
-# Ignore the output video from Git but not videos you import into src/.
-out
+# test output
+test-results
+playwright-report
+coverage
+
+# intermediate audio render artifacts (the committed .ogg files live in public/audio)
+scripts/.audio-wav

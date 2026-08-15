@@ -1,37 +1,42 @@
 {
-  "name": "template-code-hike",
-  "version": "1.0.0",
-  "description": "My Remotion video",
-  "repository": {},
+  "name": "red-alert",
+  "version": "0.1.0",
+  "description": "复刻《红色警报》 — a playable Command & Conquer: Red Alert style RTS in the browser",
+  "private": true,
   "license": "UNLICENSED",
   "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "tsc -b && eslint .",
+    "format": "prettier --write \"**/*.{ts,tsx,css,json,md}\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "audio": "python3 scripts/gen-audio.py"
+  },
   "dependencies": {
-    "@code-hike/lighter": "1.0.3",
-    "@remotion/cli": "^4.0.0",
-    "@remotion/google-fonts": "^4.0.0",
-    "@remotion/studio": "^4.0.0",
-    "@remotion/layout-utils": "^4.0.0",
-    "codehike": "1.0.4",
+    "@fontsource/noto-sans-sc": "5.3.0",
+    "@fontsource/press-start-2p": "5.3.0",
     "react": "19.2.3",
-    "react-dom": "19.2.3",
-    "remotion": "^4.0.0",
-    "twoslash-cdn": "0.3.1",
-    "polished": "4.3.1",
-    "zod": "3.22.3"
+    "react-dom": "19.2.3"
   },
   "devDependencies": {
-    "@remotion/eslint-config-flat": "^4.0.0",
+    "@eslint/js": "9.39.5",
+    "@playwright/test": "1.62.1",
+    "@types/node": "22.13.1",
     "@types/react": "19.2.7",
-    "@types/web": "0.0.166",
-    "eslint": "9.19.0",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.5",
+    "eslint": "9.39.5",
+    "eslint-plugin-react-hooks": "5.2.0",
+    "eslint-plugin-react-refresh": "0.4.18",
+    "globals": "15.14.0",
     "prettier": "3.6.0",
-    "typescript": "5.9.3"
-  },
-  "scripts": {
-    "dev": "remotion studio",
-    "build": "remotion bundle",
-    "upgrade": "remotion upgrade",
-    "lint": "tsc && eslint src"
-  },
-  "private": true
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.67.0",
+    "vite": "8.2.1",
+    "vitest": "4.1.10"
+  }
 }

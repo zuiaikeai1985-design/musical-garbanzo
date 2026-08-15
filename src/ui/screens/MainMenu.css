@@ -1,0 +1,188 @@
+.menu-root {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #0a0705;
+}
+
+/* Dark radial "spotlight on a concrete wall" backdrop with a faint hammer-and-sickle red glow. */
+.menu-bg {
+  position: absolute;
+  inset: -10%;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(192, 36, 42, 0.28) 0%, rgba(0, 0, 0, 0) 55%),
+    repeating-linear-gradient(
+      115deg,
+      rgba(255, 255, 255, 0.014) 0px,
+      rgba(255, 255, 255, 0.014) 2px,
+      rgba(0, 0, 0, 0) 2px,
+      rgba(0, 0, 0, 0) 7px
+    ),
+    linear-gradient(180deg, #140d0b 0%, #0a0705 60%, #050403 100%);
+}
+
+.menu-panel {
+  position: relative;
+  z-index: 2;
+  width: min(680px, 92vw);
+  padding: 28px 34px 34px;
+  text-align: center;
+  background: linear-gradient(180deg, #33291f 0%, #241c15 40%, #1a140f 100%);
+  border: 3px solid #0c0806;
+  box-shadow:
+    inset 2px 2px 0 #6b5744,
+    inset -2px -2px 0 #0c0806,
+    0 0 0 3px #4a3b2d,
+    0 22px 60px rgba(0, 0, 0, 0.75);
+}
+
+.menu-banner {
+  width: 100%;
+  height: auto;
+  max-width: 640px;
+  image-rendering: pixelated;
+}
+
+.menu-title {
+  margin: 10px 0 4px;
+  font-family: var(--font-ui);
+  font-size: 28px;
+  letter-spacing: 0.14em;
+  color: #ff5a44;
+  text-shadow:
+    0 0 12px rgba(255, 60, 40, 0.7),
+    3px 3px 0 #4a0d0a;
+}
+
+html[data-lang="zh"] .menu-title {
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+}
+
+.menu-subtitle {
+  margin: 0 0 22px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: var(--ra-text-dim);
+}
+
+html[data-lang="zh"] .menu-subtitle {
+  font-size: 14px;
+}
+
+.menu-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--ra-text-dim);
+}
+
+html[data-lang="zh"] .menu-label {
+  font-size: 13px;
+}
+
+.menu-difficulty {
+  margin-bottom: 24px;
+}
+
+.menu-difficulty-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.menu-chip,
+.menu-button {
+  font-family: var(--font-ui);
+  background: linear-gradient(180deg, #574636 0%, #3a2e24 100%);
+  border: 2px solid #0c0806;
+  box-shadow:
+    inset 1px 1px 0 #8d7c68,
+    inset -1px -1px 0 #1a140f;
+  color: var(--ra-text);
+  transition: none;
+}
+
+.menu-chip {
+  padding: 10px 14px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+
+html[data-lang="zh"] .menu-chip {
+  font-size: 13px;
+}
+
+.menu-chip:hover,
+.menu-button:hover {
+  background: linear-gradient(180deg, #6b5744 0%, #48392c 100%);
+}
+
+.menu-chip.is-active {
+  background: linear-gradient(180deg, #c0242a 0%, #7d1418 100%);
+  color: #ffe9c9;
+  box-shadow:
+    inset 1px 1px 0 #ff6a5a,
+    inset -1px -1px 0 #3d0a0c;
+}
+
+.menu-button {
+  width: 100%;
+  padding: 16px;
+  font-size: 13px;
+  letter-spacing: 0.16em;
+}
+
+html[data-lang="zh"] .menu-button {
+  font-size: 18px;
+  letter-spacing: 0.3em;
+}
+
+.menu-button--primary {
+  background: linear-gradient(180deg, #c0242a 0%, #7d1418 100%);
+  color: #ffe9c9;
+  box-shadow:
+    inset 1px 1px 0 #ff6a5a,
+    inset -1px -1px 0 #3d0a0c;
+}
+
+.menu-button--primary:hover {
+  background: linear-gradient(180deg, #e03038 0%, #96181d 100%);
+}
+
+.menu-foot {
+  margin: 18px 0 0;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--ra-text-dim);
+}
+
+html[data-lang="zh"] .menu-foot {
+  font-size: 12px;
+}
+
+.lang-toggle {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 5;
+  padding: 10px 16px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--ra-text);
+  background: linear-gradient(180deg, #574636 0%, #3a2e24 100%);
+  border: 2px solid #0c0806;
+  box-shadow:
+    inset 1px 1px 0 #8d7c68,
+    inset -1px -1px 0 #1a140f;
+}
+
+.lang-toggle:hover {
+  background: linear-gradient(180deg, #6b5744 0%, #48392c 100%);
+}

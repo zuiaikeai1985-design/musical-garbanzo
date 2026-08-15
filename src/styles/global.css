@@ -1,0 +1,83 @@
+@import "@fontsource/press-start-2p/400.css";
+@import "@fontsource/noto-sans-sc/400.css";
+@import "@fontsource/noto-sans-sc/700.css";
+
+:root {
+  /* Red Alert-ish VGA palette, shared between CSS and the canvas palette module. */
+  --ra-ink: #05060a;
+  --ra-panel-dark: #171310;
+  --ra-panel-mid: #2f2620;
+  --ra-panel-lite: #58483a;
+  --ra-steel: #8d7c68;
+  --ra-steel-hi: #cbbba1;
+  --ra-soviet: #c0242a;
+  --ra-soviet-hi: #ff4a3d;
+  --ra-allied: #2f6fd0;
+  --ra-green: #35c23a;
+  --ra-green-dim: #1d6b21;
+  --ra-amber: #e8b23a;
+  --ra-ore: #d8a53c;
+  --ra-text: #ddd6c6;
+  --ra-text-dim: #8e8577;
+
+  --font-pixel: "Press Start 2P", "Noto Sans SC", monospace;
+  --font-cjk: "Noto Sans SC", "WenQuanYi Micro Hei", "Microsoft YaHei", sans-serif;
+  --font-ui: "Press Start 2P", "Noto Sans SC", "WenQuanYi Micro Hei", sans-serif;
+
+  color-scheme: dark;
+}
+
+/* Chinese glyphs do not exist in Press Start 2P, so the CJK face takes over for zh. */
+html[data-lang="zh"] {
+  --font-ui: "Noto Sans SC", "WenQuanYi Micro Hei", "Microsoft YaHei", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--ra-ink);
+  color: var(--ra-text);
+  font-family: var(--font-ui);
+  overflow: hidden;
+  user-select: none;
+  -webkit-font-smoothing: none;
+}
+
+button {
+  font-family: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+canvas {
+  display: block;
+  image-rendering: pixelated;
+}
+
+/* ── CRT scanline / vignette overlay, applied on top of every screen ───────── */
+.crt-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9000;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.22) 0px,
+      rgba(0, 0, 0, 0.22) 1px,
+      rgba(0, 0, 0, 0) 1px,
+      rgba(0, 0, 0, 0) 3px
+    ),
+    radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.55) 100%);
+  mix-blend-mode: multiply;
+}

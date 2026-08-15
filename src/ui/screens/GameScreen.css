@@ -1,0 +1,61 @@
+.game-root {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  background: #05060a;
+}
+
+.game-viewport {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.game-viewport canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.game-sidebar {
+  flex: 0 0 232px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  background: linear-gradient(180deg, #33291f 0%, #241c15 40%, #1a140f 100%);
+  border-left: 3px solid #0c0806;
+  box-shadow: inset 2px 0 0 #6b5744;
+}
+
+.sidebar-slot {
+  padding: 8px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--ra-text-dim);
+  background: #14100c;
+  border: 2px solid #0c0806;
+  box-shadow: inset 1px 1px 0 #3a2e24;
+}
+
+html[data-lang="zh"] .sidebar-slot {
+  font-size: 13px;
+}
+
+.sidebar-exit {
+  margin-top: auto;
+  padding: 12px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: #ffe9c9;
+  background: linear-gradient(180deg, #c0242a 0%, #7d1418 100%);
+  border: 2px solid #0c0806;
+  box-shadow:
+    inset 1px 1px 0 #ff6a5a,
+    inset -1px -1px 0 #3d0a0c;
+}
+
+html[data-lang="zh"] .sidebar-exit {
+  font-size: 14px;
+}

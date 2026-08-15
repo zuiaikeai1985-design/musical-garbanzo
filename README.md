@@ -1,63 +1,48 @@
-# Remotion video
+# 红色警报 · RED ALERT
 
-<p align="center">
-  <a href="https://github.com/remotion-dev/logo">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://github.com/remotion-dev/logo/raw/main/animated-logo-banner-dark.apng">
-      <img alt="Animated Remotion Logo" src="https://github.com/remotion-dev/logo/raw/main/animated-logo-banner-light.gif">
-    </picture>
-  </a>
-</p>
+A playable, browser-based real-time-strategy game in the style of **Command & Conquer: Red Alert
+(1996)**, played from the Soviet side. Bilingual interface (English / 简体中文), original synthesized
+soundtrack, and 100 % procedurally generated pixel art.
 
-Welcome to your Remotion project!
+> This is a non-commercial fan tribute. **No original game assets are used.** Every sprite is drawn by
+> code in `src/render/sprites/`, and every sound is synthesized by `scripts/gen-audio.py`.
+
+## Quick start
+
+```bash
+npm install
+npm run dev      # http://127.0.0.1:5173
+```
 
 ## Commands
 
-**Install Dependencies**
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Vite dev server with HMR |
+| `npm run build` | Type-check and produce a static bundle in `dist/` |
+| `npm run preview` | Serve the production build |
+| `npm run lint` | `tsc -b` + ESLint |
+| `npm test` | Vitest unit + headless-simulation tests |
+| `npm run test:e2e` | Playwright end-to-end tests |
+| `npm run audio` | Regenerate `public/audio/*` from `scripts/gen-audio.py` |
 
-```console
-npm i
-```
+## Architecture
 
-**Start Preview**
+Layers depend strictly one way: `engine → (render, ui, input, audio)`.
 
-```console
-npm run dev
-```
+| Directory | Responsibility |
+| --- | --- |
+| `src/engine/` | The simulation. **Pure TypeScript — no DOM, no React, no canvas.** Runs headless in Node, which is what makes whole matches testable in CI. |
+| `src/render/` | Reads engine state and draws to a canvas. Never mutates the world. |
+| `src/input/` | Translates DOM events into typed engine `Command`s. |
+| `src/ui/` | React shell and HUD. Reads a throttled snapshot; dispatches commands. |
+| `src/audio/` | Subscribes to the engine event bus and plays cues. |
+| `src/i18n/` | `en.ts` is the source of truth; `zh.ts` is typed against it, so a missing translation is a compile error. |
+| `src/maps/` | Mission definitions (terrain, starting bases, AI configuration). |
 
-**Change code snippets**
+The simulation runs at a fixed **30 ticks/second** with an accumulator, while rendering happens every
+animation frame and interpolates positions, so movement stays smooth on high-refresh displays.
 
-The snippets are located in the `public` folder.  
-Change the code or create new files in there.
+## Status
 
-**Render video**
-
-```console
-npx remotion render
-```
-
-**Upgrade Remotion**
-
-```console
-npx remotion upgrade
-```
-
-## More examples
-
-Visit the [Code Hike examples](https://github.com/code-hike/examples/tree/main/with-remotion) for more variants of code animations.
-
-## Docs
-
-Get started with Remotion by reading the [fundamentals page](https://www.remotion.dev/docs/the-fundamentals).
-
-## Help
-
-We provide help on our [Discord server](https://discord.gg/6VzzNDwUwV).
-
-## Issues
-
-Found an issue with Remotion? [File an issue here](https://github.com/remotion-dev/remotion/issues/new).
-
-## License
-
-Note that for some entities a company license is needed. [Read the terms here](https://github.com/remotion-dev/remotion/blob/main/LICENSE.md).
+Under active development — see the phase tracker in the project plan.
