@@ -17,6 +17,16 @@ synthesized soundtrack, and 100 % procedurally generated pixel art.
 
 ## Quick start · 快速开始
 
+**不会编程？三步开玩 · Never used a terminal? Three steps:**
+
+1. 安装 [Node.js](https://nodejs.org/zh-cn)（像装普通软件一样，一路点"下一步"）
+   · Install [Node.js](https://nodejs.org) like any normal app
+2. 下载本仓库的 ZIP 并解压 · Download this repo as a ZIP and unzip it
+3. 双击 **`启动游戏.bat`**（Windows）或 **`启动游戏.command`**（Mac，首次需右键 → 打开）,
+   浏览器会自动打开游戏 · Double-click the launcher; your browser opens the game
+
+**会用终端的话 · Or with a terminal:**
+
 ```bash
 npm install
 npm run dev      # http://127.0.0.1:5173
