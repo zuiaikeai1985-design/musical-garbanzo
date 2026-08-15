@@ -1,7 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "../hooks/useLanguage";
 import type { Difficulty } from "../../engine/types";
 import { drawTitleBanner } from "../../render/sprites/titleBanner";
+import { audio } from "../../audio/AudioManager";
+import { Settings } from "./Settings";
 import "./MainMenu.css";
 
 const DIFFICULTIES: readonly Difficulty[] = ["easy", "normal", "hard"];
@@ -17,6 +19,26 @@ export function MainMenu({
 }) {
   const { t, lang, toggleLang } = useLanguage();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
+
+  // Browsers refuse to start audio outside a user gesture, so the context is created on the
+  // first interaction anywhere on the menu and the ambient loop starts once decoding finishes.
+  useEffect(() => {
+    let cancelled = false;
+    const start = () => {
+      audio.unlock();
+      void audio.load().then(() => {
+        if (!cancelled) audio.playMusic("menu");
+      });
+    };
+    window.addEventListener("pointerdown", start, { once: true });
+    window.addEventListener("keydown", start, { once: true });
+    return () => {
+      cancelled = true;
+      window.removeEventListener("pointerdown", start);
+      window.removeEventListener("keydown", start);
+    };
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -69,7 +91,10 @@ export function MainMenu({
               <button
                 key={d}
                 className={"menu-chip" + (d === difficulty ? " is-active" : "")}
-                onClick={() => onDifficulty(d)}
+                onClick={() => {
+                  audio.play("uiClick");
+                  onDifficulty(d);
+                }}
                 data-testid={`difficulty-${d}`}
               >
                 {difficultyLabel[d]}
@@ -82,10 +107,23 @@ export function MainMenu({
           {t.menuNewMission}
         </button>
 
+        <button
+          className="menu-button menu-button--secondary"
+          onClick={() => {
+            audio.play("uiClick");
+            setShowSettings(true);
+          }}
+          data-testid="open-settings"
+        >
+          {t.menuSettings}
+        </button>
+
         <p className="menu-foot" lang={lang === "zh" ? "zh-CN" : "en"}>
           {t.briefingMissionLabel} · {t.briefingMissionName}
         </p>
       </div>
+
+      {showSettings && <Settings onClose={() => setShowSettings(false)} />}
     </div>
   );
 }

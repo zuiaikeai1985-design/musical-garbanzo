@@ -10,9 +10,11 @@ import { Minimap } from "../../render/minimap";
 import { Renderer } from "../../render/renderer";
 import { SpriteAtlas } from "../../render/sprites/atlas";
 import { IconCache } from "../../render/sprites/icons";
+import { audio } from "../../audio/AudioManager";
 import { hasRadar } from "../../engine/systems/power";
 import { GameController, type CursorKind } from "../../input/controls";
 import { installTestBridge, removeTestBridge } from "../testBridge";
+import { getPrefs } from "../prefs";
 import { snapshot, type HudSnapshot } from "../hooks/useGameSnapshot";
 import { nextTab, Sidebar } from "../hud/Sidebar";
 import { Loading } from "./Loading";
@@ -77,6 +79,12 @@ export function GameScreen({
       });
       if (cancelled) return;
 
+      // Audio loads alongside the mission rather than blocking it; a silent first second is far
+      // better than a black screen.
+      void audio.load().then(() => {
+        if (!cancelled) audio.playMusic("theme");
+      });
+
       const canvas = canvasRef.current;
       const viewport = viewportRef.current;
       if (!canvas || !viewport) return;
@@ -132,7 +140,7 @@ export function GameScreen({
       const frame = (now: number) => {
         const dtMs = Math.min(250, now - last);
         last = now;
-        controller.update(dtMs / 1000, true);
+        controller.update(dtMs / 1000, getPrefs().edgeScroll);
 
         accumulator += dtMs;
         let steps = 0;
@@ -156,10 +164,22 @@ export function GameScreen({
           minimap.invalidate();
         }
 
+        audio.setListener(
+          camera.x + camera.viewportWidth / camera.zoom / 2,
+          camera.y + camera.viewportHeight / camera.zoom / 2,
+          camera.zoom,
+        );
+
         for (const event of world.events) {
-          // Only shake for blasts the player can actually see.
           if (event.type === "screenShake" && camera.isVisible(event.x, event.y, 200)) {
+            // Only shake for blasts the player can actually see.
             shake = Math.min(14, shake + event.magnitude);
+          } else if (event.type === "sound") {
+            audio.play(event.cue, event.x, event.y);
+            if (event.cue === "klaxon") audio.duckMusic(0.35, 3);
+            if (event.cue === "nukeImpact") audio.duckMusic(0.2, 5);
+          } else if (event.type === "gameOver") {
+            audio.stopMusic(1.5);
           }
         }
         world.events.length = 0;
@@ -197,6 +217,7 @@ export function GameScreen({
       engineRef.current?.controller.detach();
       engineRef.current = null;
       removeTestBridge();
+      audio.stopMusic(0.4);
     };
   }, [difficulty]);
 

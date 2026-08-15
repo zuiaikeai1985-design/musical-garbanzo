@@ -151,6 +151,15 @@ html[data-lang="zh"] .menu-button {
     inset -1px -1px 0 #3d0a0c;
 }
 
+.menu-button--secondary {
+  margin-top: 8px;
+  font-size: 11px;
+}
+
+html[data-lang="zh"] .menu-button--secondary {
+  font-size: 15px;
+}
+
 .menu-button--primary:hover {
   background: linear-gradient(180deg, #e03038 0%, #96181d 100%);
 }

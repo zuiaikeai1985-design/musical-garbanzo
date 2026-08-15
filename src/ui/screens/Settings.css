@@ -1,0 +1,116 @@
+.settings-root {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  background: rgba(3, 4, 6, 0.78);
+}
+
+.settings-panel {
+  width: min(520px, 92%);
+  padding: 22px 26px 24px;
+  background: linear-gradient(180deg, #33291f 0%, #241c15 40%, #1a140f 100%);
+  border: 3px solid #0c0806;
+  box-shadow:
+    inset 2px 2px 0 #6b5744,
+    inset -2px -2px 0 #0c0806,
+    0 22px 60px rgba(0, 0, 0, 0.75);
+}
+
+.settings-title {
+  margin: 0 0 18px;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  letter-spacing: 0.16em;
+  text-align: center;
+  color: #ff5a44;
+}
+
+html[data-lang="zh"] .settings-title {
+  font-size: 20px;
+  letter-spacing: 0.3em;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 0;
+}
+
+.settings-row + .settings-row {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.settings-label {
+  flex: 0 0 40%;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--ra-text-dim);
+}
+
+html[data-lang="zh"] .settings-label {
+  font-size: 13px;
+}
+
+.settings-choices {
+  display: flex;
+  gap: 6px;
+}
+
+.settings-chip {
+  padding: 7px 12px;
+  font-family: var(--font-ui);
+  font-size: 9px;
+  color: var(--ra-text);
+  background: linear-gradient(180deg, #574636 0%, #3a2e24 100%);
+  border: 2px solid #0c0806;
+  box-shadow:
+    inset 1px 1px 0 #8d7c68,
+    inset -1px -1px 0 #1a140f;
+}
+
+html[data-lang="zh"] .settings-chip {
+  font-size: 12px;
+}
+
+.settings-chip.is-active {
+  background: linear-gradient(180deg, #c0242a 0%, #7d1418 100%);
+  color: #ffe9c9;
+  box-shadow:
+    inset 1px 1px 0 #ff6a5a,
+    inset -1px -1px 0 #3d0a0c;
+}
+
+.settings-slider {
+  flex: 1 1 auto;
+  accent-color: #c0242a;
+  height: 14px;
+}
+
+.settings-readout {
+  flex: 0 0 34px;
+  font-size: 10px;
+  text-align: right;
+  color: var(--ra-amber);
+}
+
+.settings-close {
+  width: 100%;
+  margin-top: 18px;
+  padding: 13px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: #ffe9c9;
+  background: linear-gradient(180deg, #c0242a 0%, #7d1418 100%);
+  border: 2px solid #0c0806;
+  box-shadow:
+    inset 1px 1px 0 #ff6a5a,
+    inset -1px -1px 0 #3d0a0c;
+}
+
+html[data-lang="zh"] .settings-close {
+  font-size: 15px;
+}
