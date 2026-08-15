@@ -10,11 +10,14 @@ import { Minimap } from "../../render/minimap";
 import { Renderer } from "../../render/renderer";
 import { SpriteAtlas } from "../../render/sprites/atlas";
 import { IconCache } from "../../render/sprites/icons";
+import { hasRadar } from "../../engine/systems/power";
 import { GameController, type CursorKind } from "../../input/controls";
 import { installTestBridge, removeTestBridge } from "../testBridge";
 import { snapshot, type HudSnapshot } from "../hooks/useGameSnapshot";
 import { nextTab, Sidebar } from "../hud/Sidebar";
 import { Loading } from "./Loading";
+import { ResultScreen } from "./ResultScreen";
+import { GameStatus } from "../../engine/types";
 import "./GameScreen.css";
 
 const MAX_CATCHUP_TICKS = 5;
@@ -33,9 +36,11 @@ interface Engine {
 export function GameScreen({
   difficulty,
   onExit,
+  onRestart,
 }: {
   difficulty: Difficulty;
   onExit: () => void;
+  onRestart: () => void;
 }) {
   const { toggleLang } = useLanguage();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -164,10 +169,13 @@ export function GameScreen({
         controller.overlay.shakeX = shake === 0 ? 0 : (Math.random() - 0.5) * shake * 2;
         controller.overlay.shakeY = shake === 0 ? 0 : (Math.random() - 0.5) * shake * 2;
 
+        // Once the match is decided, lift the fog so the player can see the whole battlefield.
+        if (world.status !== GameStatus.Playing) renderer.shroudEnabled = false;
+
         renderer.draw(ctx, camera, accumulator / TICK_MS, controller.overlay, world.tick);
 
         const mini = minimapRef.current;
-        if (mini) minimap.draw(mini, camera, false);
+        if (mini) minimap.draw(mini, camera, renderer.shroudEnabled, hasRadar(world, world.humanSide));
 
         hudTimer += dtMs;
         if (hudTimer >= HUD_INTERVAL_MS) {
@@ -262,6 +270,15 @@ export function GameScreen({
       <div className="game-viewport" ref={viewportRef}>
         <canvas ref={canvasRef} data-testid="battlefield" data-cursor={cursor} />
         {!engine && <Loading fraction={progress.fraction} label={progress.label} />}
+        {hud && hud.status !== GameStatus.Playing && (
+          <ResultScreen
+            victory={hud.status === GameStatus.Victory}
+            stats={hud.stats}
+            ticks={hud.tick}
+            onRestart={onRestart}
+            onMenu={onExit}
+          />
+        )}
       </div>
 
       {hud && engine ? (

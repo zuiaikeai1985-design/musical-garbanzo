@@ -2,8 +2,9 @@ import { TILE } from "../engine/constants";
 import { structureDef, unitDef } from "../engine/rules";
 import type { Structure, StructureKindId, Unit } from "../engine/types";
 import { lerp } from "../engine/util/vec";
-import type { World } from "../engine/world";
+import { Visibility, type World } from "../engine/world";
 import type { Camera } from "./camera";
+import { ShroudLayer } from "./shroudLayer";
 import { frameForAngle } from "./sprites/canvas";
 import { PAL } from "./sprites/palette";
 import type { SpriteAtlas } from "./sprites/atlas";
@@ -37,12 +38,26 @@ export const EMPTY_OVERLAY: RenderOverlay = {
 
 export class Renderer {
   readonly terrain: TerrainRenderer;
+  private readonly shroud: ShroudLayer;
+  /** Turned off by the result screen so the final map is fully revealed. */
+  shroudEnabled = true;
 
   constructor(
     private readonly world: World,
     private readonly atlas: SpriteAtlas,
   ) {
     this.terrain = new TerrainRenderer(world.grid, atlas.tiles);
+    this.shroud = new ShroudLayer(world);
+  }
+
+  /** Visibility of a world position, or `Visible` when the shroud is disabled. */
+  private visibilityAt(x: number, y: number): Visibility {
+    if (!this.shroudEnabled) return Visibility.Visible;
+    const grid = this.world.grid;
+    const tx = Math.floor(x / TILE);
+    const ty = Math.floor(y / TILE);
+    if (!grid.inBounds(tx, ty)) return Visibility.Unexplored;
+    return this.world.visibility[grid.index(tx, ty)] as Visibility;
   }
 
   /**
@@ -72,6 +87,7 @@ export class Renderer {
     this.drawUnits(ctx, camera, alpha);
     this.drawEffectLayer(ctx, camera, alpha, false);
     drawProjectiles(ctx, camera, this.world, alpha);
+    if (this.shroudEnabled) this.shroud.draw(ctx, camera);
     this.drawPlacement(ctx, camera, overlay.placement);
 
     ctx.restore();
@@ -101,7 +117,12 @@ export class Renderer {
       const def = structureDef(s.kind);
       const wx = s.tx * TILE;
       const wy = s.ty * TILE;
-      if (!camera.isVisible(wx + (def.w * TILE) / 2, wy + (def.h * TILE) / 2, def.w * TILE)) {
+      const cx = wx + (def.w * TILE) / 2;
+      const cy = wy + (def.h * TILE) / 2;
+      if (!camera.isVisible(cx, cy, def.w * TILE)) continue;
+      // Enemy buildings stay on the map once seen — the player remembers where the base is —
+      // but are never revealed before they have been scouted.
+      if (s.side !== this.world.humanSide && this.visibilityAt(cx, cy) === Visibility.Unexplored) {
         continue;
       }
 
@@ -160,6 +181,7 @@ export class Renderer {
       const x = lerp(u.px, u.x, alpha);
       const y = lerp(u.py, u.y, alpha);
       if (!camera.isVisible(x, y)) continue;
+      if (!this.unitObservable(u.side, x, y)) continue;
       const sprite = this.atlas.unit(u.kind, u.side);
       const sw = sprite.shadow.width * camera.zoom;
       const sh = sprite.shadow.height * camera.zoom;
@@ -177,8 +199,15 @@ export class Renderer {
       const x = lerp(u.px, u.x, alpha);
       const y = lerp(u.py, u.y, alpha);
       if (!camera.isVisible(x, y)) continue;
+      if (!this.unitObservable(u.side, x, y)) continue;
       this.drawUnit(ctx, camera, u, x, y);
     }
+  }
+
+  /** Own units always render; enemy units only while actually being observed. */
+  private unitObservable(side: Unit["side"], x: number, y: number): boolean {
+    if (side === this.world.humanSide) return true;
+    return this.visibilityAt(x, y) === Visibility.Visible;
   }
 
   private drawUnit(

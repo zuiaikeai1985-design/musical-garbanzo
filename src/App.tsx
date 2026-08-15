@@ -13,6 +13,11 @@ const SPRITE_MODE =
 export function App() {
   const [screen, setScreen] = useState<Screen>("menu");
   const [difficulty, setDifficulty] = useState<Difficulty>("normal");
+  /**
+   * Bumping this remounts <GameScreen>, which is the cleanest way to restart a mission: the
+   * whole simulation, renderer and input layer are rebuilt from scratch with no stale state.
+   */
+  const [runId, setRunId] = useState(0);
 
   if (SPRITE_MODE) return <SpriteViewer />;
 
@@ -22,10 +27,18 @@ export function App() {
         <MainMenu
           difficulty={difficulty}
           onDifficulty={setDifficulty}
-          onStart={() => setScreen("game")}
+          onStart={() => {
+            setRunId((n) => n + 1);
+            setScreen("game");
+          }}
         />
       ) : (
-        <GameScreen difficulty={difficulty} onExit={() => setScreen("menu")} />
+        <GameScreen
+          key={runId}
+          difficulty={difficulty}
+          onExit={() => setScreen("menu")}
+          onRestart={() => setRunId((n) => n + 1)}
+        />
       )}
       <div className="crt-overlay" />
     </>

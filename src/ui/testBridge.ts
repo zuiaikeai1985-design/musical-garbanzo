@@ -42,6 +42,8 @@ export interface RaTestBridge {
   hpOf(ids: number[]): number;
   effectCount(): number;
   projectileCount(): number;
+  /** Instantly eliminates a side so the victory/defeat flow can be exercised. */
+  wipeSide(side: "soviet" | "allied"): void;
 }
 
 declare global {
@@ -153,6 +155,15 @@ export function installTestBridge(game: Game, camera: Camera): void {
     },
     effectCount: () => world.effects.length,
     projectileCount: () => world.projectiles.length,
+    wipeSide: (side) => {
+      for (const u of world.units) if (u.side === side) u.dead = true;
+      for (const s of world.structures) {
+        if (s.side !== side) continue;
+        const def = structureDef(s.kind);
+        s.dead = true;
+        world.grid.vacate(s.tx, s.ty, def.w, def.h);
+      }
+    },
   };
 }
 

@@ -18,6 +18,7 @@ import {
   toggleHold,
   toggleRepair,
 } from "./systems/production";
+import { shroudSystem } from "./systems/shroud";
 import { victorySystem } from "./systems/victory";
 import type { MissionDef } from "../maps/types";
 
@@ -78,6 +79,7 @@ export class Game {
     projectileSystem(world);
     powerSystem(world);
     productionSystem(world);
+    shroudSystem(world);
     this.updateEffects();
     this.removeDead();
     victorySystem(world);

@@ -36,9 +36,20 @@ export class Minimap {
     this.dirty = true;
   }
 
-  /** Renders into `canvas`, which is expected to be square-ish and small. */
-  draw(canvas: HTMLCanvasElement, camera: Camera, shroudEnabled: boolean): void {
-    if (this.dirty) this.bakeTerrain(shroudEnabled);
+  /**
+   * Renders into `canvas`.
+   *
+   * `hasRadar` gates the live picture: without a powered Radar Dome the player still sees the
+   * terrain they have explored, but no unit blips — the same trade-off the original made, which
+   * is what gives the Radar Dome (and knocking out the enemy's) a real purpose.
+   */
+  draw(
+    canvas: HTMLCanvasElement,
+    camera: Camera,
+    shroudEnabled: boolean,
+    hasRadar: boolean,
+  ): void {
+    if (this.dirty) this.bakeTerrain();
 
     const ctx = ctx2d(canvas);
     const grid = this.world.grid;
@@ -50,6 +61,8 @@ export class Minimap {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(this.base, offsetX, offsetY, grid.width * scale, grid.height * scale);
+
+    if (shroudEnabled) this.drawShroud(ctx, offsetX, offsetY, scale);
 
     const dot = Math.max(1, Math.round(scale));
     const toX = (wx: number) => offsetX + (wx / TILE) * scale;
@@ -68,13 +81,22 @@ export class Minimap {
       );
     }
 
-    for (const u of this.world.units) {
-      if (u.dead) continue;
-      const tx = Math.floor(u.x / TILE);
-      const ty = Math.floor(u.y / TILE);
-      if (shroudEnabled && !this.visible(tx, ty) && u.side !== this.world.humanSide) continue;
-      ctx.fillStyle = TEAM[u.side].light;
-      ctx.fillRect(Math.round(toX(u.x)) - 1, Math.round(toY(u.y)) - 1, dot + 1, dot + 1);
+    if (hasRadar) {
+      for (const u of this.world.units) {
+        if (u.dead) continue;
+        const tx = Math.floor(u.x / TILE);
+        const ty = Math.floor(u.y / TILE);
+        if (shroudEnabled && !this.visible(tx, ty) && u.side !== this.world.humanSide) continue;
+        ctx.fillStyle = TEAM[u.side].light;
+        ctx.fillRect(Math.round(toX(u.x)) - 1, Math.round(toY(u.y)) - 1, dot + 1, dot + 1);
+      }
+    } else {
+      // Without radar, only the player's own forces show — they report in by radio.
+      for (const u of this.world.units) {
+        if (u.dead || u.side !== this.world.humanSide) continue;
+        ctx.fillStyle = TEAM[u.side].light;
+        ctx.fillRect(Math.round(toX(u.x)) - 1, Math.round(toY(u.y)) - 1, dot + 1, dot + 1);
+      }
     }
 
     // Viewport rectangle.
@@ -85,6 +107,32 @@ export class Minimap {
     const vw = (camera.viewportWidth / camera.zoom / TILE) * scale;
     const vh = (camera.viewportHeight / camera.zoom / TILE) * scale;
     ctx.strokeRect(Math.round(vx) + 0.5, Math.round(vy) + 0.5, Math.round(vw), Math.round(vh));
+  }
+
+  /** Live shroud overlay: unexplored tiles are blacked out, remembered ones dimmed. */
+  private drawShroud(
+    ctx: CanvasRenderingContext2D,
+    offsetX: number,
+    offsetY: number,
+    scale: number,
+  ): void {
+    const grid = this.world.grid;
+    const vis = this.world.visibility;
+    const cell = Math.max(1, Math.ceil(scale));
+    for (let ty = 0; ty < grid.height; ty++) {
+      for (let tx = 0; tx < grid.width; tx++) {
+        const state = vis[ty * grid.width + tx];
+        if (state === Visibility.Visible) continue;
+        ctx.fillStyle =
+          state === Visibility.Unexplored ? "#05060a" : "rgba(5,6,10,0.45)";
+        ctx.fillRect(
+          Math.floor(offsetX + tx * scale),
+          Math.floor(offsetY + ty * scale),
+          cell,
+          cell,
+        );
+      }
+    }
   }
 
   /** Converts a click inside the minimap canvas into world coordinates. */
@@ -112,7 +160,7 @@ export class Minimap {
     return this.world.visibility[this.world.grid.index(tx, ty)] === Visibility.Visible;
   }
 
-  private bakeTerrain(shroudEnabled: boolean): void {
+  private bakeTerrain(): void {
     const grid = this.world.grid;
     const ctx = ctx2d(this.base);
     const image = ctx.createImageData(grid.width, grid.height);
@@ -124,9 +172,6 @@ export class Minimap {
         let color = TERRAIN_COLORS[grid.terrain[i]] ?? PAL.grass1;
         if (grid.ore[i] > 0) {
           color = grid.oreKind[i] === OreKind.Gem ? PAL.gem2 : PAL.ore2;
-        }
-        if (shroudEnabled && this.world.visibility[i] === Visibility.Unexplored) {
-          color = "#05060a";
         }
         const rgb = parseHex(color);
         const p = i * 4;
