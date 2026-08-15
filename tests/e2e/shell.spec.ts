@@ -16,14 +16,17 @@ test.describe("shell", () => {
 
     await toBriefing(page);
     const text = page.getByTestId("briefing-text");
-    const partial = (await text.textContent()) ?? "";
 
-    // Clicking the backdrop skips to the full text.
+    // Clicking the backdrop skips straight to the end of the typewriter.
+    //
+    // Deliberately asserted on completeness rather than "the text grew": on a cold browser the
+    // dossier can finish typing before the click lands, which made a growth assertion flaky.
     await page.mouse.click(60, 60);
-    await page.waitForTimeout(150);
+    await page.waitForTimeout(200);
     const full = (await text.textContent()) ?? "";
-    expect(full.length).toBeGreaterThan(partial.length);
     expect(full).toContain("Allied forces");
+    expect(full, "the whole dossier should be shown").toContain("grind their base into the dirt");
+    expect(full, "the typing caret should be gone once complete").not.toContain("_");
 
     await page.screenshot({ path: "test-results/briefing.png" });
     expect(errors, errors.join("\n")).toHaveLength(0);
