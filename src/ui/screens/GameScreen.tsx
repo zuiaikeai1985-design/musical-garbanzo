@@ -121,6 +121,8 @@ export function GameScreen({
       let last = performance.now();
       let accumulator = 0;
       let hudTimer = 0;
+      /** Current screen-shake magnitude in pixels; decays exponentially each frame. */
+      let shake = 0;
 
       const frame = (now: number) => {
         const dtMs = Math.min(250, now - last);
@@ -148,7 +150,19 @@ export function GameScreen({
           world.dirtyTiles.length = 0;
           minimap.invalidate();
         }
+
+        for (const event of world.events) {
+          // Only shake for blasts the player can actually see.
+          if (event.type === "screenShake" && camera.isVisible(event.x, event.y, 200)) {
+            shake = Math.min(14, shake + event.magnitude);
+          }
+        }
         world.events.length = 0;
+
+        shake *= Math.pow(0.86, dtMs / 16.7);
+        if (shake < 0.15) shake = 0;
+        controller.overlay.shakeX = shake === 0 ? 0 : (Math.random() - 0.5) * shake * 2;
+        controller.overlay.shakeY = shake === 0 ? 0 : (Math.random() - 0.5) * shake * 2;
 
         renderer.draw(ctx, camera, accumulator / TICK_MS, controller.overlay, world.tick);
 

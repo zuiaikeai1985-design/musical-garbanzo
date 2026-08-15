@@ -84,6 +84,9 @@ export class World {
    */
   readonly dirtyTiles: number[] = [];
 
+  /** Tick of the last "our base is under attack" warning, used to rate-limit it. */
+  lastAttackWarningTick = -9999;
+
   pendingNuke: PendingNuke | null = null;
   /** Set while a Missile Silo is charged and the player is choosing a target. */
   nukeReadySilo: EntityId = 0;

@@ -31,6 +31,17 @@ export interface RaTestBridge {
    * existing building the moment the map or the camera changes.
    */
   placementSpot(kind: string): { x: number; y: number; tx: number; ty: number } | null;
+  /**
+   * Drops a scratch force onto the map so combat can be exercised without waiting for the AI to
+   * walk an attack wave across seventy tiles.
+   */
+  spawnSkirmish(): { friendly: number[]; hostile: number[] };
+  /** Total hit points remaining on a side — a cheap way to prove a fight is actually happening. */
+  totalHp(side: "soviet" | "allied"): number;
+  /** Hit points remaining across a specific set of entities (dead ones count as zero). */
+  hpOf(ids: number[]): number;
+  effectCount(): number;
+  projectileCount(): number;
 }
 
 declare global {
@@ -105,6 +116,43 @@ export function installTestBridge(game: Game, camera: Camera): void {
       }
       return null;
     },
+    spawnSkirmish: () => {
+      // Place both forces just below the centre of the current view, four tiles apart so they
+      // are inside cannon range and open fire straight away.
+      const cx = camera.x + camera.viewportWidth / camera.zoom / 2;
+      const cy = camera.y + camera.viewportHeight / camera.zoom / 2;
+      const friendly: number[] = [];
+      const hostile: number[] = [];
+      for (let i = 0; i < 4; i++) {
+        friendly.push(
+          world.spawnUnit("3tnk", "soviet", cx - TILE * 2, cy + (i - 1.5) * TILE * 1.6, 0).id,
+        );
+        hostile.push(
+          world.spawnUnit("2tnk", "allied", cx + TILE * 3, cy + (i - 1.5) * TILE * 1.6, Math.PI).id,
+        );
+      }
+      hostile.push(
+        world.spawnUnit("e1a", "allied", cx + TILE * 4, cy + TILE * 2, Math.PI).id,
+        world.spawnUnit("e1a", "allied", cx + TILE * 4, cy - TILE * 2, Math.PI).id,
+      );
+      return { friendly, hostile };
+    },
+    totalHp: (side) => {
+      let sum = 0;
+      for (const u of world.units) if (u.side === side && !u.dead) sum += u.hp;
+      for (const s of world.structures) if (s.side === side && !s.dead) sum += s.hp;
+      return Math.round(sum);
+    },
+    hpOf: (ids: number[]) => {
+      let sum = 0;
+      for (const id of ids) {
+        const e = world.entity(id);
+        if (e && !e.dead) sum += e.hp;
+      }
+      return Math.round(sum);
+    },
+    effectCount: () => world.effects.length,
+    projectileCount: () => world.projectiles.length,
   };
 }
 

@@ -8,6 +8,7 @@ import { frameForAngle } from "./sprites/canvas";
 import { PAL } from "./sprites/palette";
 import type { SpriteAtlas } from "./sprites/atlas";
 import { TerrainRenderer } from "./terrainChunks";
+import { drawEffects, drawProjectiles } from "./fx";
 
 export interface PlacementPreview {
   kind: StructureKindId;
@@ -65,13 +66,30 @@ export class Renderer {
     }
 
     this.terrain.draw(ctx, camera);
+    // Ground scars (craters, wrecks, corpses) belong under the units that walk over them.
+    this.drawEffectLayer(ctx, camera, alpha, true);
     this.drawStructures(ctx, camera, animTick);
     this.drawUnits(ctx, camera, alpha);
+    this.drawEffectLayer(ctx, camera, alpha, false);
+    drawProjectiles(ctx, camera, this.world, alpha);
     this.drawPlacement(ctx, camera, overlay.placement);
 
     ctx.restore();
 
     this.drawMarquee(ctx, overlay.marquee);
+  }
+
+  /**
+   * Effects are split into two passes around the unit layer so scorch marks sit on the ground
+   * while explosions and tracers read as being in the air above everything.
+   */
+  private drawEffectLayer(
+    ctx: CanvasRenderingContext2D,
+    camera: Camera,
+    alpha: number,
+    ground: boolean,
+  ): void {
+    drawEffects(ctx, camera, this.world.effects, alpha, ground);
   }
 
   // ── Structures ────────────────────────────────────────────────────────────

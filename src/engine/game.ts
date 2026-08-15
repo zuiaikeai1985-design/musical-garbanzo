@@ -2,7 +2,9 @@ import { PATH_BUDGET_PER_TICK } from "./constants";
 import type { Command } from "./commands";
 import { GameStatus, type Difficulty, type EntityId } from "./types";
 import { World } from "./world";
+import { combatSystem } from "./systems/combat";
 import { harvestingSystem } from "./systems/harvesting";
+import { projectileSystem } from "./systems/projectiles";
 import { movementSystem } from "./systems/movement";
 import { applyOrder, giveOrder, orderSystem } from "./systems/orders";
 import { powerSystem } from "./systems/power";
@@ -65,6 +67,8 @@ export class Game {
     orderSystem(world);
     harvestingSystem(world);
     movementSystem(world);
+    combatSystem(world);
+    projectileSystem(world);
     powerSystem(world);
     productionSystem(world);
     this.updateEffects();
