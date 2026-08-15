@@ -44,9 +44,6 @@ export const OreKind = {
 } as const;
 export type OreKind = (typeof OreKind)[keyof typeof OreKind];
 
-/** How much a single tile can hold, in "scoops". Each scoop is worth `ORE_VALUE` credits. */
-export const MAX_ORE_DENSITY = 12;
-
 // ── Armour / weapons ────────────────────────────────────────────────────────
 
 export const ArmorKind = {
@@ -281,6 +278,11 @@ export interface Unit {
   queued: Order[];
   path: TilePoint[];
   pathIndex: number;
+  /** Tile the unit is currently trying to reach; -1 when it has no destination. */
+  destTx: number;
+  destTy: number;
+  /** A path to (destTx,destTy) has been requested but not yet computed. */
+  pathPending: boolean;
   /** Ticks until the unit may fire again. */
   cooldown: number;
   /** Remaining shots in the current burst. */
@@ -438,7 +440,11 @@ export interface Player {
   storage: number;
   powerProduced: number;
   powerConsumed: number;
+  /** produced/consumed, clamped to 1. Drives production speed and defensive-structure uptime. */
+  powerFactor: number;
   queues: Record<QueueKind, ProductionQueue>;
+  /** Preferred producing structure per queue (RA's "primary building"). */
+  primary: Partial<Record<QueueKind, EntityId>>;
   stats: PlayerStats;
   defeated: boolean;
 }
