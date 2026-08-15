@@ -1,6 +1,7 @@
 import { TILE } from "../engine/constants";
 import type { Game } from "../engine/game";
 import { structureDef, unitDef } from "../engine/rules";
+import { isPlacementLegal } from "../engine/systems/production";
 import type { EntityId, Order, StructureKindId } from "../engine/types";
 import { worldToTileX, worldToTileY } from "../engine/util/vec";
 import type { Camera } from "../render/camera";
@@ -700,31 +701,12 @@ export class GameController {
   }
 }
 
-/** Shared placement validity rule, used by both the preview and the engine command. */
+/**
+ * Placement preview validity.
+ *
+ * Deliberately delegates to the same engine predicate the `placeStructure` command uses, so the
+ * green/red overlay can never disagree with what the simulation will accept.
+ */
 export function canPlace(game: Game, kind: StructureKindId, tx: number, ty: number): boolean {
-  const world = game.world;
-  const def = structureDef(kind);
-  if (!world.footprintFree(tx, ty, def.w, def.h)) return false;
-  // Must be within build range of an existing friendly structure.
-  return withinBuildRadius(game, tx, ty, def.w, def.h);
-}
-
-export function withinBuildRadius(
-  game: Game,
-  tx: number,
-  ty: number,
-  w: number,
-  h: number,
-): boolean {
-  const world = game.world;
-  const side = world.humanSide;
-  const radius = 6;
-  for (const s of world.structures) {
-    if (s.side !== side || s.dead) continue;
-    const sd = structureDef(s.kind);
-    const dx = Math.max(s.tx - (tx + w), tx - (s.tx + sd.w), 0);
-    const dy = Math.max(s.ty - (ty + h), ty - (s.ty + sd.h), 0);
-    if (Math.hypot(dx, dy) <= radius) return true;
-  }
-  return false;
+  return isPlacementLegal(game.world, game.world.humanSide, kind, tx, ty);
 }

@@ -1,5 +1,8 @@
+import { TILE } from "../engine/constants";
 import type { Game } from "../engine/game";
 import { structureDef } from "../engine/rules";
+import { isPlacementLegal } from "../engine/systems/production";
+import type { StructureKindId } from "../engine/types";
 import type { Camera } from "../render/camera";
 
 /**
@@ -22,6 +25,12 @@ export interface RaTestBridge {
   camera(): { x: number; y: number; zoom: number };
   /** Grants credits so tests can exercise the build system without waiting for the economy. */
   grantCredits(amount: number): void;
+  /**
+   * Canvas-relative pixel position of a legal build site for `kind`, or null if there is none
+   * on screen. Tests need this because hard-coded drop coordinates silently land on top of an
+   * existing building the moment the map or the camera changes.
+   */
+  placementSpot(kind: string): { x: number; y: number; tx: number; ty: number } | null;
 }
 
 declare global {
@@ -61,6 +70,40 @@ export function installTestBridge(game: Game, camera: Camera): void {
     camera: () => ({ x: camera.x, y: camera.y, zoom: camera.zoom }),
     grantCredits: (amount: number) => {
       game.dispatch({ type: "cheatCredits", side: world.humanSide, amount });
+    },
+    placementSpot: (kind: string) => {
+      const structureKind = kind as StructureKindId;
+      const def = structureDef(structureKind);
+      const home = world.structures.find(
+        (s) => s.side === world.humanSide && s.kind === "conyard" && !s.dead,
+      );
+      if (!home) return null;
+
+      const view = camera.visibleTiles(-1);
+      // Spiral out from the Construction Yard so the site stays inside the build radius.
+      for (let r = 2; r <= 8; r++) {
+        for (let dy = -r; dy <= r; dy++) {
+          for (let dx = -r; dx <= r; dx++) {
+            if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+            const tx = home.tx + dx;
+            const ty = home.ty + dy;
+            if (tx < view.x0 || ty < view.y0 || tx + def.w > view.x1 || ty + def.h > view.y1) {
+              continue;
+            }
+            if (!isPlacementLegal(world, world.humanSide, structureKind, tx, ty)) continue;
+            // The controller centres the footprint on the cursor, so aim at the middle tile.
+            const anchorX = (tx + Math.floor((def.w - 1) / 2) + 0.5) * TILE;
+            const anchorY = (ty + Math.floor((def.h - 1) / 2) + 0.5) * TILE;
+            return {
+              x: camera.worldToScreenX(anchorX),
+              y: camera.worldToScreenY(anchorY),
+              tx,
+              ty,
+            };
+          }
+        }
+      }
+      return null;
     },
   };
 }

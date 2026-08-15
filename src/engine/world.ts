@@ -329,10 +329,20 @@ export class World {
     return cap;
   }
 
-  /** Adds credits, clamped to storage capacity. Returns the amount actually banked. */
+  /**
+   * Adds credits, clamped to storage capacity. Returns the amount actually banked.
+   *
+   * Deliberately never *reduces* the balance: a player who is already over capacity (because a
+   * silo was just sold or destroyed) should stop earning, not have money confiscated.
+   */
   addCredits(side: Side, amount: number): number {
     const player = this.players[side];
+    if (amount <= 0) {
+      player.credits = Math.max(0, player.credits + amount);
+      return amount;
+    }
     const cap = this.storageCapacity(side);
+    if (player.credits >= cap) return 0;
     const before = player.credits;
     player.credits = Math.min(cap, player.credits + amount);
     return player.credits - before;

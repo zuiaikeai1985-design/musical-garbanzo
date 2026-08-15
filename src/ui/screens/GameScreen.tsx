@@ -2,18 +2,24 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useLanguage } from "../hooks/useLanguage";
 import { TICK_MS } from "../../engine/constants";
 import { Game } from "../../engine/game";
-import type { Difficulty } from "../../engine/types";
+import { SidebarTab, type Difficulty, type StructureKindId } from "../../engine/types";
+import type { BuildOption } from "../../engine/queries";
 import { m01IronCurtain } from "../../maps/m01-iron-curtain";
 import { Camera } from "../../render/camera";
 import { Minimap } from "../../render/minimap";
 import { Renderer } from "../../render/renderer";
 import { SpriteAtlas } from "../../render/sprites/atlas";
+import { IconCache } from "../../render/sprites/icons";
 import { GameController, type CursorKind } from "../../input/controls";
 import { installTestBridge, removeTestBridge } from "../testBridge";
+import { snapshot, type HudSnapshot } from "../hooks/useGameSnapshot";
+import { nextTab, Sidebar } from "../hud/Sidebar";
 import { Loading } from "./Loading";
 import "./GameScreen.css";
 
 const MAX_CATCHUP_TICKS = 5;
+/** HUD refresh rate; the simulation and renderer are unaffected by this. */
+const HUD_INTERVAL_MS = 100;
 
 interface Engine {
   game: Game;
@@ -21,6 +27,7 @@ interface Engine {
   renderer: Renderer;
   minimap: Minimap;
   controller: GameController;
+  icons: IconCache;
 }
 
 export function GameScreen({
@@ -30,21 +37,24 @@ export function GameScreen({
   difficulty: Difficulty;
   onExit: () => void;
 }) {
-  const { t, toggleLang } = useLanguage();
+  const { toggleLang } = useLanguage();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const minimapRef = useRef<HTMLCanvasElement | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const engineRef = useRef<Engine | null>(null);
 
   const [progress, setProgress] = useState({ fraction: 0, label: "" });
-  const [ready, setReady] = useState(false);
+  const [engine, setEngine] = useState<Engine | null>(null);
   const [cursor, setCursor] = useState<CursorKind>("default");
-  const [hud, setHud] = useState({ credits: 0, power: 0, drain: 0, units: 0 });
+  const [hud, setHud] = useState<HudSnapshot | null>(null);
+  const [tab, setTab] = useState<SidebarTab>(SidebarTab.Structures);
+  const [tools, setTools] = useState({ sell: false, repair: false });
 
   const handleHotkey = useCallback(
     (key: string) => {
       if (key === "l") toggleLang();
-      if (key === "escape") onExit();
+      else if (key === "escape") onExit();
+      else if (key === "tab") setTab((t) => nextTab(t));
     },
     [onExit, toggleLang],
   );
@@ -54,6 +64,7 @@ export function GameScreen({
   useEffect(() => {
     let cancelled = false;
     let raf = 0;
+    let observer: ResizeObserver | null = null;
 
     const boot = async () => {
       const atlas = await SpriteAtlas.build((fraction, label) => {
@@ -69,9 +80,11 @@ export function GameScreen({
       const camera = new Camera(game.world.grid.worldWidth, game.world.grid.worldHeight);
       const renderer = new Renderer(game.world, atlas);
       const minimap = new Minimap(game.world);
+      const icons = new IconCache(atlas);
       const controller = new GameController(canvas, game, camera, {
         onCursorChanged: setCursor,
         onHotkey: (key) => hotkeyRef.current(key),
+        onPlacementDone: () => setTools({ sell: false, repair: false }),
       });
 
       const resize = () => {
@@ -81,7 +94,7 @@ export function GameScreen({
         camera.setViewport(canvas.width, canvas.height);
       };
       resize();
-      const observer = new ResizeObserver(resize);
+      observer = new ResizeObserver(resize);
       observer.observe(viewport);
 
       // Open on the player's Construction Yard rather than a hard-coded tile.
@@ -94,10 +107,13 @@ export function GameScreen({
       } else {
         camera.centerOnTile(m01IronCurtain.cameraStart.tx, m01IronCurtain.cameraStart.ty);
       }
+
       controller.attach();
-      engineRef.current = { game, camera, renderer, minimap, controller };
+      const next: Engine = { game, camera, renderer, minimap, controller, icons };
+      engineRef.current = next;
       installTestBridge(game, camera);
-      setReady(true);
+      setEngine(next);
+      setHud(snapshot(game));
 
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
@@ -109,9 +125,7 @@ export function GameScreen({
       const frame = (now: number) => {
         const dtMs = Math.min(250, now - last);
         last = now;
-        const dt = dtMs / 1000;
-
-        controller.update(dt, true);
+        controller.update(dtMs / 1000, true);
 
         accumulator += dtMs;
         let steps = 0;
@@ -126,95 +140,136 @@ export function GameScreen({
         const world = game.world;
         if (world.dirtyTiles.length > 0) {
           for (const index of world.dirtyTiles) {
-            renderer.terrain.invalidateTile(index % world.grid.width, Math.floor(index / world.grid.width));
+            renderer.terrain.invalidateTile(
+              index % world.grid.width,
+              Math.floor(index / world.grid.width),
+            );
           }
           world.dirtyTiles.length = 0;
           minimap.invalidate();
         }
         world.events.length = 0;
 
-        const alpha = accumulator / TICK_MS;
-        renderer.draw(ctx, camera, alpha, controller.overlay, world.tick);
+        renderer.draw(ctx, camera, accumulator / TICK_MS, controller.overlay, world.tick);
 
         const mini = minimapRef.current;
         if (mini) minimap.draw(mini, camera, false);
 
         hudTimer += dtMs;
-        if (hudTimer > 120) {
+        if (hudTimer >= HUD_INTERVAL_MS) {
           hudTimer = 0;
-          const player = world.players[world.humanSide];
-          setHud({
-            credits: Math.floor(player.credits),
-            power: player.powerProduced,
-            drain: player.powerConsumed,
-            units: world.units.filter((u) => u.side === world.humanSide).length,
-          });
+          setHud(snapshot(game));
         }
 
         raf = requestAnimationFrame(frame);
       };
       raf = requestAnimationFrame(frame);
-
-      return () => observer.disconnect();
     };
 
-    const cleanupPromise = boot();
+    void boot();
 
     return () => {
       cancelled = true;
       cancelAnimationFrame(raf);
+      observer?.disconnect();
       engineRef.current?.controller.detach();
       engineRef.current = null;
       removeTestBridge();
-      void cleanupPromise;
     };
   }, [difficulty]);
 
-  const onMinimapClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const engine = engineRef.current;
+  const onMinimapPointer = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const eng = engineRef.current;
     const canvas = minimapRef.current;
-    if (!engine || !canvas) return;
+    if (!eng || !canvas) return;
     const rect = canvas.getBoundingClientRect();
-    const point = engine.minimap.canvasToWorld(
+    const point = eng.minimap.canvasToWorld(
       canvas,
       ((e.clientX - rect.left) / rect.width) * canvas.width,
       ((e.clientY - rect.top) / rect.height) * canvas.height,
     );
-    if (point) engine.camera.centerOn(point.x, point.y);
+    if (point) eng.camera.centerOn(point.x, point.y);
+  };
+
+  const onBuild = (option: BuildOption) => {
+    const eng = engineRef.current;
+    if (!eng) return;
+    const world = eng.game.world;
+    const queue = world.players[world.humanSide].queues[option.queue];
+    const head = queue.items[0];
+
+    // A finished structure enters placement mode instead of being queued again.
+    if (option.isStructure && head && head.what === option.id && head.progress > 0) {
+      const done = head.progress >= option.buildTime;
+      if (done) {
+        eng.controller.beginPlacement(option.id as StructureKindId);
+        setTools({ sell: false, repair: false });
+        return;
+      }
+    }
+    eng.game.dispatch({
+      type: "queueAdd",
+      side: world.humanSide,
+      queue: option.queue,
+      what: option.id,
+    });
+  };
+
+  const onCancel = (option: BuildOption) => {
+    const eng = engineRef.current;
+    if (!eng) return;
+    if (eng.controller.isPlacing) eng.controller.cancelPlacement();
+    eng.game.dispatch({
+      type: "queueCancel",
+      side: eng.game.world.humanSide,
+      queue: option.queue,
+      what: option.id,
+    });
+  };
+
+  const toggleSell = () => {
+    const eng = engineRef.current;
+    if (!eng) return;
+    const next = !eng.controller.isSelling;
+    eng.controller.setSellMode(next);
+    setTools({ sell: next, repair: false });
+  };
+
+  const toggleRepair = () => {
+    const eng = engineRef.current;
+    if (!eng) return;
+    const next = !eng.controller.isRepairing;
+    eng.controller.setRepairMode(next);
+    setTools({ sell: false, repair: next });
   };
 
   return (
     <div className="game-root">
       <div className="game-viewport" ref={viewportRef}>
         <canvas ref={canvasRef} data-testid="battlefield" data-cursor={cursor} />
-        {!ready && <Loading fraction={progress.fraction} label={progress.label} />}
+        {!engine && <Loading fraction={progress.fraction} label={progress.label} />}
       </div>
 
-      <aside className="game-sidebar" data-testid="sidebar">
-        <canvas
-          ref={minimapRef}
-          className="sidebar-radar"
-          width={216}
-          height={216}
-          onClick={onMinimapClick}
-          data-testid="minimap"
+      {hud && engine ? (
+        <Sidebar
+          hud={hud}
+          icons={engine.icons}
+          side={engine.game.world.humanSide}
+          minimapRef={minimapRef}
+          onMinimapPointer={onMinimapPointer}
+          onBuild={onBuild}
+          onCancel={onCancel}
+          onToggleSell={toggleSell}
+          onToggleRepair={toggleRepair}
+          sellActive={tools.sell}
+          repairActive={tools.repair}
+          onAbort={onExit}
+          activeTab={tab}
+          onTab={setTab}
         />
-        <div className="sidebar-readout">
-          <span className="readout-label">{t.hudCredits}</span>
-          <span className="readout-value" data-testid="credits">
-            ${hud.credits}
-          </span>
-        </div>
-        <div className="sidebar-readout">
-          <span className="readout-label">{t.hudPower}</span>
-          <span className="readout-value">
-            {hud.power} / {hud.drain}
-          </span>
-        </div>
-        <button className="sidebar-exit" onClick={onExit} data-testid="exit">
-          {t.abort}
-        </button>
-      </aside>
+      ) : (
+        <aside className="sidebar" />
+      )}
     </div>
   );
 }

@@ -6,6 +6,15 @@ import { harvestingSystem } from "./systems/harvesting";
 import { movementSystem } from "./systems/movement";
 import { applyOrder, giveOrder, orderSystem } from "./systems/orders";
 import { powerSystem } from "./systems/power";
+import {
+  cancelFromQueue,
+  enqueue,
+  placeReadyStructure,
+  productionSystem,
+  sellStructure,
+  toggleHold,
+  toggleRepair,
+} from "./systems/production";
 import { victorySystem } from "./systems/victory";
 import type { MissionDef } from "../maps/types";
 
@@ -57,6 +66,7 @@ export class Game {
     harvestingSystem(world);
     movementSystem(world);
     powerSystem(world);
+    productionSystem(world);
     this.updateEffects();
     this.removeDead();
     victorySystem(world);
@@ -94,14 +104,31 @@ export class Game {
           world.addCredits(cmd.side, cmd.amount);
           break;
         }
-        // Production, placement, selling, repair and the superweapon are handled by their own
-        // systems, added in later phases.
-        case "queueAdd":
-        case "queueCancel":
-        case "queueToggleHold":
-        case "placeStructure":
-        case "sellStructure":
-        case "toggleRepair":
+        case "queueAdd": {
+          enqueue(world, cmd.side, cmd.what);
+          break;
+        }
+        case "queueCancel": {
+          cancelFromQueue(world, cmd.side, cmd.what);
+          break;
+        }
+        case "queueToggleHold": {
+          toggleHold(world, cmd.side, cmd.queue);
+          break;
+        }
+        case "placeStructure": {
+          placeReadyStructure(world, cmd.side, cmd.what, cmd.tx, cmd.ty);
+          break;
+        }
+        case "sellStructure": {
+          sellStructure(world, cmd.id);
+          break;
+        }
+        case "toggleRepair": {
+          toggleRepair(world, cmd.id);
+          break;
+        }
+        // The superweapon lands in a later phase.
         case "launchNuke":
           break;
       }
