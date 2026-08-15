@@ -45,6 +45,8 @@ export class GameController {
   private placingKind: StructureKindId | null = null;
   private sellMode = false;
   private repairMode = false;
+  /** Missile Silo awaiting a target, or 0. */
+  private nukeSilo: EntityId = 0;
 
   private keys = new Set<string>();
   private pointerX = -1;
@@ -174,6 +176,25 @@ export class GameController {
     this.setCursor(on ? "repair" : "default");
   }
 
+  /** Enters nuclear targeting mode; the next left click designates the impact point. */
+  beginNukeTargeting(siloId: EntityId): void {
+    this.nukeSilo = siloId;
+    this.cancelPlacement();
+    this.sellMode = false;
+    this.repairMode = false;
+    this.setCursor("attack");
+  }
+
+  cancelNukeTargeting(): void {
+    if (this.nukeSilo === 0) return;
+    this.nukeSilo = 0;
+    this.setCursor("default");
+  }
+
+  get isTargetingNuke(): boolean {
+    return this.nukeSilo !== 0;
+  }
+
   get isSelling(): boolean {
     return this.sellMode;
   }
@@ -198,6 +219,16 @@ export class GameController {
     }
 
     if (e.button === 0) {
+      if (this.nukeSilo !== 0) {
+        this.game.dispatch({
+          type: "launchNuke",
+          id: this.nukeSilo,
+          x: this.camera.screenToWorldX(x),
+          y: this.camera.screenToWorldY(y),
+        });
+        this.cancelNukeTargeting();
+        return;
+      }
       if (this.placingKind) {
         this.commitPlacement();
         return;
@@ -213,6 +244,10 @@ export class GameController {
 
     if (e.button === 2) {
       e.preventDefault();
+      if (this.nukeSilo !== 0) {
+        this.cancelNukeTargeting();
+        return;
+      }
       if (this.placingKind) {
         this.cancelPlacement();
         return;
@@ -310,7 +345,8 @@ export class GameController {
 
     switch (key) {
       case "escape":
-        if (this.placingKind) this.cancelPlacement();
+        if (this.nukeSilo !== 0) this.cancelNukeTargeting();
+        else if (this.placingKind) this.cancelPlacement();
         else if (this.sellMode) this.setSellMode(false);
         else if (this.repairMode) this.setRepairMode(false);
         else this.callbacks.onHotkey?.("escape");
@@ -662,7 +698,7 @@ export class GameController {
   // ── Cursor ────────────────────────────────────────────────────────────────
 
   private updateHoverCursor(): void {
-    if (this.placingKind || this.sellMode || this.repairMode) return;
+    if (this.placingKind || this.sellMode || this.repairMode || this.nukeSilo !== 0) return;
     const world = this.game.world;
     const wx = this.camera.screenToWorldX(this.pointerX);
     const wy = this.camera.screenToWorldY(this.pointerY);

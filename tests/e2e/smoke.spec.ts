@@ -22,9 +22,11 @@ test.describe("boot", () => {
     await expect(page.getByTestId("app-title")).toHaveText("红色警报");
     await page.screenshot({ path: "test-results/menu-zh.png" });
 
-    // Back to English, then into the mission.
+    // Back to English, then through the briefing and into the mission.
     await page.getByTestId("lang-toggle").click();
     await page.getByTestId("start").click();
+    await expect(page.getByTestId("briefing")).toBeVisible();
+    await page.getByTestId("briefing-proceed").click();
     await expect(page.getByTestId("battlefield")).toBeVisible();
     await page.screenshot({ path: "test-results/game.png" });
 

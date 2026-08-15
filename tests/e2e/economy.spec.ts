@@ -1,15 +1,9 @@
 import { expect, test } from "@playwright/test";
+import { collectErrors, startMission } from "./helpers";
 
 test("the harvester earns credits in a live browser session", async ({ page }) => {
-  const errors: string[] = [];
-  page.on("pageerror", (e) => errors.push(String(e)));
-  page.on("console", (m) => {
-    if (m.type() === "error") errors.push(m.text());
-  });
-
-  await page.goto("/");
-  await page.getByTestId("start").click();
-  await expect(page.getByTestId("loading")).toBeHidden({ timeout: 30_000 });
+  const errors = collectErrors(page);
+  await startMission(page);
 
   // Zero the treasury through the bridge so the reading is purely harvested income.
   await page.evaluate(() => window.__ra?.grantCredits(-window.__ra.credits()));

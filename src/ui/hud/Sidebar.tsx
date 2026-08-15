@@ -6,6 +6,7 @@ import type { BuildOption } from "../../engine/queries";
 import type { HudSnapshot } from "../hooks/useGameSnapshot";
 import type { IconCache } from "../../render/sprites/icons";
 import { BuildIcon } from "./BuildIcon";
+import { Superweapon } from "./Superweapon";
 import "./Sidebar.css";
 
 const TABS: readonly SidebarTab[] = [
@@ -30,6 +31,8 @@ export interface SidebarProps {
   onAbort: () => void;
   activeTab: SidebarTab;
   onTab: (tab: SidebarTab) => void;
+  onTargetNuke: () => void;
+  nukeTargeting: boolean;
 }
 
 export function Sidebar({
@@ -47,6 +50,8 @@ export function Sidebar({
   onAbort,
   activeTab,
   onTab,
+  onTargetNuke,
+  nukeTargeting,
 }: SidebarProps) {
   const { t } = useLanguage();
   const [hovered, setHovered] = useState<string | null>(null);
@@ -121,6 +126,14 @@ export function Sidebar({
         </div>
         {powerRatio < 1 && <div className="power-warning">{t.hudPowerLow}</div>}
       </div>
+
+      {hud.superweapon && (
+        <Superweapon
+          view={hud.superweapon}
+          onTarget={onTargetNuke}
+          targeting={nukeTargeting}
+        />
+      )}
 
       <div className="sidebar-tools">
         <button

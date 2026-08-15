@@ -68,6 +68,11 @@ function reveal(world: World, cx: number, cy: number, radius: number): void {
   }
 }
 
+/** Permanently reveals a circular area, e.g. where a nuclear flash lit up the sky. */
+export function revealArea(world: World, x: number, y: number, radiusTiles: number): void {
+  reveal(world, worldToTileX(x), worldToTileY(y), radiusTiles);
+}
+
 /** Reveals the whole map — used by the result screen and by debug tooling. */
 export function revealAll(world: World): void {
   world.visibility.fill(Visibility.Visible);

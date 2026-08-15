@@ -19,6 +19,7 @@ import {
   toggleRepair,
 } from "./systems/production";
 import { shroudSystem } from "./systems/shroud";
+import { launchNuke, superweaponSystem } from "./systems/superweapon";
 import { victorySystem } from "./systems/victory";
 import type { MissionDef } from "../maps/types";
 
@@ -79,6 +80,7 @@ export class Game {
     projectileSystem(world);
     powerSystem(world);
     productionSystem(world);
+    superweaponSystem(world);
     shroudSystem(world);
     this.updateEffects();
     this.removeDead();
@@ -141,9 +143,10 @@ export class Game {
           toggleRepair(world, cmd.id);
           break;
         }
-        // The superweapon lands in a later phase.
-        case "launchNuke":
+        case "launchNuke": {
+          launchNuke(world, cmd.id, cmd.x, cmd.y);
           break;
+        }
       }
     }
     queue.length = 0;

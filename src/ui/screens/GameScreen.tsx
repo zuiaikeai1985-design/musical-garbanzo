@@ -17,8 +17,11 @@ import { installTestBridge, removeTestBridge } from "../testBridge";
 import { getPrefs } from "../prefs";
 import { snapshot, type HudSnapshot } from "../hooks/useGameSnapshot";
 import { nextTab, Sidebar } from "../hud/Sidebar";
+import { NukeAlert } from "../hud/NukeAlert";
 import { Loading } from "./Loading";
 import { ResultScreen } from "./ResultScreen";
+import { PauseMenu } from "./PauseMenu";
+import { Help } from "./Help";
 import { GameStatus } from "../../engine/types";
 import "./GameScreen.css";
 
@@ -56,14 +59,25 @@ export function GameScreen({
   const [hud, setHud] = useState<HudSnapshot | null>(null);
   const [tab, setTab] = useState<SidebarTab>(SidebarTab.Structures);
   const [tools, setTools] = useState({ sell: false, repair: false });
+  const [nukeTargeting, setNukeTargeting] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  /**
+   * The render loop is created once and captured in a closure, so it reads pause state through a
+   * ref rather than through the (stale) state value it closed over.
+   */
+  const pausedRef = useRef(false);
+  pausedRef.current = paused || showHelp;
 
   const handleHotkey = useCallback(
     (key: string) => {
       if (key === "l") toggleLang();
-      else if (key === "escape") onExit();
+      else if (key === "escape") setPaused((p) => !p);
+      else if (key === "p") setPaused((p) => !p);
+      else if (key === "f1") setShowHelp((h) => !h);
       else if (key === "tab") setTab((t) => nextTab(t));
     },
-    [onExit, toggleLang],
+    [toggleLang],
   );
   const hotkeyRef = useRef(handleHotkey);
   hotkeyRef.current = handleHotkey;
@@ -142,14 +156,21 @@ export function GameScreen({
         last = now;
         controller.update(dtMs / 1000, getPrefs().edgeScroll);
 
-        accumulator += dtMs;
-        let steps = 0;
-        while (accumulator >= TICK_MS && steps < MAX_CATCHUP_TICKS) {
-          game.tick();
-          accumulator -= TICK_MS;
-          steps++;
+        if (pausedRef.current) {
+          // Keep rendering (so the pause overlay sits over a live-looking battlefield) but stop
+          // advancing the simulation, and drop the accumulated time so it does not fast-forward
+          // the moment play resumes.
+          accumulator = 0;
+        } else {
+          accumulator += dtMs;
+          let steps = 0;
+          while (accumulator >= TICK_MS && steps < MAX_CATCHUP_TICKS) {
+            game.tick();
+            accumulator -= TICK_MS;
+            steps++;
+          }
+          if (steps === MAX_CATCHUP_TICKS) accumulator = 0;
         }
-        if (steps === MAX_CATCHUP_TICKS) accumulator = 0;
 
         // Drain engine output so the queues do not grow without bound.
         const world = game.world;
@@ -201,6 +222,8 @@ export function GameScreen({
         if (hudTimer >= HUD_INTERVAL_MS) {
           hudTimer = 0;
           setHud(snapshot(game));
+          // The controller can leave targeting mode on its own (Esc, right click, launch).
+          setNukeTargeting(controller.isTargetingNuke);
         }
 
         raf = requestAnimationFrame(frame);
@@ -270,6 +293,21 @@ export function GameScreen({
     });
   };
 
+  const onTargetNuke = () => {
+    const eng = engineRef.current;
+    if (!eng) return;
+    const silo = eng.game.world.nukeReadySilo;
+    if (!silo) return;
+    if (eng.controller.isTargetingNuke) {
+      eng.controller.cancelNukeTargeting();
+      setNukeTargeting(false);
+      return;
+    }
+    eng.controller.beginNukeTargeting(silo);
+    setNukeTargeting(true);
+    setTools({ sell: false, repair: false });
+  };
+
   const toggleSell = () => {
     const eng = engineRef.current;
     if (!eng) return;
@@ -291,6 +329,18 @@ export function GameScreen({
       <div className="game-viewport" ref={viewportRef}>
         <canvas ref={canvasRef} data-testid="battlefield" data-cursor={cursor} />
         {!engine && <Loading fraction={progress.fraction} label={progress.label} />}
+        {hud?.pendingNuke && <NukeAlert nuke={hud.pendingNuke} />}
+        {showHelp && <Help onClose={() => setShowHelp(false)} />}
+        {paused && !showHelp && hud?.status === GameStatus.Playing && (
+          <PauseMenu
+            onResume={() => setPaused(false)}
+            onRestart={() => {
+              setPaused(false);
+              onRestart();
+            }}
+            onAbort={onExit}
+          />
+        )}
         {hud && hud.status !== GameStatus.Playing && (
           <ResultScreen
             victory={hud.status === GameStatus.Victory}
@@ -318,6 +368,8 @@ export function GameScreen({
           onAbort={onExit}
           activeTab={tab}
           onTab={setTab}
+          onTargetNuke={onTargetNuke}
+          nukeTargeting={nukeTargeting}
         />
       ) : (
         <aside className="sidebar" />

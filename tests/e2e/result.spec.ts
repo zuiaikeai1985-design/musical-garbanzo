@@ -1,11 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
-
-async function startMission(page: Page) {
-  await page.goto("/");
-  await page.getByTestId("start").click();
-  await expect(page.getByTestId("loading")).toBeHidden({ timeout: 30_000 });
-  await page.waitForTimeout(400);
-}
+import { expect, test } from "@playwright/test";
+import { startMission } from "./helpers";
 
 test.describe("mission results", () => {
   test("shows the victory tally when the enemy is wiped out", async ({ page }) => {
@@ -24,11 +18,7 @@ test.describe("mission results", () => {
   });
 
   test("shows the defeat tally in Chinese and can restart", async ({ page }) => {
-    await page.goto("/");
-    await page.getByTestId("lang-toggle").click();
-    await page.getByTestId("start").click();
-    await expect(page.getByTestId("loading")).toBeHidden({ timeout: 30_000 });
-    await page.waitForTimeout(400);
+    await startMission(page, "zh");
 
     await page.evaluate(() => window.__ra?.wipeSide("soviet"));
     await expect(page.getByTestId("result")).toBeVisible({ timeout: 15_000 });

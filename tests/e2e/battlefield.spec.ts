@@ -1,25 +1,15 @@
 import { expect, test, type Page } from "@playwright/test";
+import { collectErrors, startMission } from "./helpers";
 
-async function startMission(page: Page) {
-  const errors: string[] = [];
-  page.on("pageerror", (e) => errors.push(String(e)));
-  page.on("console", (m) => {
-    if (m.type() === "error") errors.push(m.text());
-  });
-
-  await page.goto("/");
-  await page.getByTestId("start").click();
-  // Sprite baking runs behind a loading screen; wait for it to disappear.
-  await expect(page.getByTestId("loading")).toBeHidden({ timeout: 30_000 });
-  await expect(page.getByTestId("battlefield")).toBeVisible();
-  // Let a few frames render.
-  await page.waitForTimeout(600);
+async function boot(page: Page): Promise<string[]> {
+  const errors = collectErrors(page);
+  await startMission(page);
   return errors;
 }
 
 test.describe("battlefield", () => {
   test("renders the map, sidebar and minimap", async ({ page }) => {
-    const errors = await startMission(page);
+    const errors = await boot(page);
     await page.screenshot({ path: "test-results/battlefield.png" });
     await expect(page.getByTestId("minimap")).toBeVisible();
     await expect(page.getByTestId("credits")).toContainText("$");
@@ -27,7 +17,7 @@ test.describe("battlefield", () => {
   });
 
   test("the canvas is actually painted (not a blank frame)", async ({ page }) => {
-    await startMission(page);
+    await boot(page);
     const stats = await page.evaluate(() => {
       const canvas = document.querySelector<HTMLCanvasElement>('[data-testid="battlefield"]');
       if (!canvas) return null;
@@ -52,7 +42,7 @@ test.describe("battlefield", () => {
   });
 
   test("scrolls the camera with the keyboard", async ({ page }) => {
-    await startMission(page);
+    await boot(page);
     const before = await page.locator('[data-testid="battlefield"]').screenshot();
     await page.keyboard.down("ArrowRight");
     await page.waitForTimeout(700);
@@ -63,7 +53,7 @@ test.describe("battlefield", () => {
   });
 
   test("box-selects units and orders them to move", async ({ page }) => {
-    await startMission(page);
+    await boot(page);
     const canvas = page.locator('[data-testid="battlefield"]');
     const box = (await canvas.boundingBox())!;
 

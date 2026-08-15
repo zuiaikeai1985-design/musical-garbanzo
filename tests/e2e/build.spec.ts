@@ -1,11 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-
-async function startMission(page: Page) {
-  await page.goto("/");
-  await page.getByTestId("start").click();
-  await expect(page.getByTestId("loading")).toBeHidden({ timeout: 30_000 });
-  await page.waitForTimeout(400);
-}
+import { startMission } from "./helpers";
 
 /**
  * Queues a structure, waits for the cameo to flash READY, then places it on a site the engine
@@ -95,11 +89,7 @@ test.describe("build system", () => {
   });
 
   test("renders the sidebar in Chinese", async ({ page }) => {
-    await page.goto("/");
-    await page.getByTestId("lang-toggle").click();
-    await page.getByTestId("start").click();
-    await expect(page.getByTestId("loading")).toBeHidden({ timeout: 30_000 });
-    await page.waitForTimeout(500);
+    await startMission(page, "zh");
     await expect(page.getByTestId("tab-structures")).toHaveText("建筑");
     await expect(page.getByTestId("build-power")).toContainText("发电厂");
     await page.screenshot({ path: "test-results/sidebar-zh.png" });

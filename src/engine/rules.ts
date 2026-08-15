@@ -197,6 +197,18 @@ export const WEAPONS: Record<string, WeaponDef> = {
     projectile: ProjectileKind.Instant,
     verses: verses(1.0, 0, 0, 0, 0),
   }),
+  /** Nuclear warhead. Flattens everything inside a wide radius, concrete included. */
+  nuke: weapon({
+    id: "nuke",
+    damage: 1200,
+    rof: 1,
+    range: 0,
+    projectile: ProjectileKind.Lobbed,
+    spread: tiles(6),
+    speed: 1,
+    groundAttack: true,
+    verses: verses(1, 1, 1, 1, 1),
+  }),
   /** Allied gun turret. */
   turretGun: weapon({
     id: "turretGun",

@@ -27,10 +27,15 @@ interface DifficultyTuning {
   harvesterBonus: number;
 }
 
+/**
+ * Tuned against the headless "idle player" benchmark: on Recruit a passive player must still be
+ * standing after ten minutes (so a newcomer has room to learn the build order), while on
+ * Commissar the same passive player is finished well inside twenty-five.
+ */
 const TUNING: Record<Difficulty, DifficultyTuning> = {
-  easy: { income: 0.7, waveInterval: 1.7, waveStrength: 0.65, harvesterBonus: -1 },
+  easy: { income: 0.45, waveInterval: 2.4, waveStrength: 0.5, harvesterBonus: -1 },
   normal: { income: 1, waveInterval: 1, waveStrength: 1, harvesterBonus: 0 },
-  hard: { income: 1.6, waveInterval: 0.65, waveStrength: 1.4, harvesterBonus: 1 },
+  hard: { income: 1.7, waveInterval: 0.6, waveStrength: 1.5, harvesterBonus: 1 },
 };
 
 export const AiPosture = {

@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { MainMenu } from "./ui/screens/MainMenu";
 import { GameScreen } from "./ui/screens/GameScreen";
+import { Briefing } from "./ui/screens/Briefing";
 import { SpriteViewer } from "./ui/screens/SpriteViewer";
 import type { Difficulty } from "./engine/types";
 
-export type Screen = "menu" | "game";
+export type Screen = "menu" | "briefing" | "game";
 
 /** `?sprites` opens the developer sprite sheet instead of the game. */
 const SPRITE_MODE =
@@ -23,16 +24,25 @@ export function App() {
 
   return (
     <>
-      {screen === "menu" ? (
+      {screen === "menu" && (
         <MainMenu
           difficulty={difficulty}
           onDifficulty={setDifficulty}
-          onStart={() => {
+          onStart={() => setScreen("briefing")}
+        />
+      )}
+
+      {screen === "briefing" && (
+        <Briefing
+          onBack={() => setScreen("menu")}
+          onProceed={() => {
             setRunId((n) => n + 1);
             setScreen("game");
           }}
         />
-      ) : (
+      )}
+
+      {screen === "game" && (
         <GameScreen
           key={runId}
           difficulty={difficulty}

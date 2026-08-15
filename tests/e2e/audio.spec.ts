@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { startMission } from "./helpers";
 
 // Headless Chrome blocks audio until a gesture; this flag lets the suite verify playback.
 test.use({
@@ -21,9 +22,7 @@ test.describe("audio", () => {
       if (r.status() >= 400) errors.push(`HTTP ${r.status()} ${r.url()}`);
     });
 
-    await page.goto("/");
-    await page.getByTestId("start").click();
-    await expect(page.getByTestId("loading")).toBeHidden({ timeout: 30_000 });
+    await startMission(page);
 
     // Every generated clip must decode; a typo in a filename would silently disable a sound.
     await expect
@@ -55,8 +54,7 @@ test.describe("audio", () => {
       localStorage.setItem("ra.audio", JSON.stringify({ musicVolume: 0.11, sfxVolume: 0.22 }));
     });
     await page.reload();
-    await page.getByTestId("start").click();
-    await expect(page.getByTestId("loading")).toBeHidden({ timeout: 30_000 });
+    await startMission(page);
 
     const settings = await page.evaluate(() => window.__raAudioState?.().settings);
     expect(settings?.musicVolume).toBeCloseTo(0.11, 5);

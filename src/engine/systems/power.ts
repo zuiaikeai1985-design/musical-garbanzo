@@ -39,7 +39,9 @@ export function powerSystem(world: World): void {
       if (s.side !== side || s.dead) continue;
       const def = structureDef(s.kind);
       const needsPower = def.powerConsumed > 0;
-      const isCritical = def.weapon !== null || def.providesRadar;
+      // Weapons, radar and superweapons are the first things to go dark in a brownout — which is
+      // exactly what makes bombing an enemy's power plants worthwhile.
+      const isCritical = def.weapon !== null || def.providesRadar || def.superweaponCharge > 0;
       s.online = !brownout || !needsPower || !isCritical;
     }
   }

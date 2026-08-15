@@ -157,3 +157,20 @@ describe("allied AI", () => {
     expect(perTick, `mean tick took ${perTick.toFixed(2)}ms`).toBeLessThan(8);
   });
 });
+
+describe("difficulty balance", () => {
+  it("gives an idle player a survivable window on Recruit", () => {
+    const game = new Game(m01IronCurtain, "easy");
+    run(game, MINUTE * 10);
+    expect(
+      structureCount(game, "soviet"),
+      "Recruit should not wipe a passive player out inside ten minutes",
+    ).toBeGreaterThan(0);
+  });
+
+  it("finishes an idle player on Commissar", () => {
+    const game = new Game(m01IronCurtain, "hard");
+    run(game, MINUTE * 25);
+    expect(game.status).not.toBe(GameStatus.Playing);
+  });
+});

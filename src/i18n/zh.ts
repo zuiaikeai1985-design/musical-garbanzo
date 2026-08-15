@@ -38,6 +38,13 @@ export const zh: Translation = {
   briefingObjectivesLabel: "任务目标",
   briefingProceed: "开始行动",
   briefingBack: "返回",
+  briefingBody1:
+    "指挥官同志。盟军已在河对岸建立前进指挥所，并开始开采争议矿区的矿石。指挥部不会容忍第二个开罗事件。",
+  briefingBody2:
+    "你拥有一座建造场、两台发电机和一座精炼厂。其余的一切靠你自己。夺取矿石，建起战争机器，把他们的基地碾成尘土。",
+  briefingObjective1: "建立矿石经济并扩张基地",
+  briefingObjective2: "组建装甲部队并守住防线",
+  briefingObjective3: "摧毁所有盟军建筑",
 
   // ── HUD ───────────────────────────────────────────────────────────────────
   hudCredits: "资金",

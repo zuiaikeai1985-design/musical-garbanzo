@@ -1,14 +1,11 @@
 import { expect, test } from "@playwright/test";
+import { collectErrors, startMission } from "./helpers";
 
 test.describe("fog of war", () => {
   test("hides the unexplored map and reveals it as units move", async ({ page }) => {
-    const errors: string[] = [];
-    page.on("pageerror", (e) => errors.push(String(e)));
-
-    await page.goto("/");
-    await page.getByTestId("start").click();
-    await expect(page.getByTestId("loading")).toBeHidden({ timeout: 30_000 });
-    await page.waitForTimeout(800);
+    const errors = collectErrors(page);
+    await startMission(page);
+    await page.waitForTimeout(400);
 
     await page.screenshot({ path: "test-results/shroud-start.png" });
 
@@ -32,9 +29,7 @@ test.describe("fog of war", () => {
   });
 
   test("the radar panel reports no radar until a dome is built", async ({ page }) => {
-    await page.goto("/");
-    await page.getByTestId("start").click();
-    await expect(page.getByTestId("loading")).toBeHidden({ timeout: 30_000 });
+    await startMission(page);
     await expect(page.getByTestId("sidebar")).toContainText("NO RADAR");
     await page.screenshot({ path: "test-results/no-radar.png" });
   });

@@ -2,6 +2,7 @@ import { TILE } from "../engine/constants";
 import type { Game } from "../engine/game";
 import { structureDef } from "../engine/rules";
 import { isPlacementLegal } from "../engine/systems/production";
+import { revealArea } from "../engine/systems/shroud";
 import type { StructureKindId } from "../engine/types";
 import type { Camera } from "../render/camera";
 
@@ -44,6 +45,11 @@ export interface RaTestBridge {
   projectileCount(): number;
   /** Instantly eliminates a side so the victory/defeat flow can be exercised. */
   wipeSide(side: "soviet" | "allied"): void;
+  /**
+   * Drops a fully charged Missile Silo next to the player's base and returns a screen position
+   * worth nuking, so the superweapon flow can be tested without a twenty-minute build-up.
+   */
+  armNuke(): { x: number; y: number } | null;
 }
 
 declare global {
@@ -155,6 +161,40 @@ export function installTestBridge(game: Game, camera: Camera): void {
     },
     effectCount: () => world.effects.length,
     projectileCount: () => world.projectiles.length,
+    armNuke: () => {
+      const home = world.structures.find(
+        (s) => s.side === world.humanSide && s.kind === "conyard" && !s.dead,
+      );
+      if (!home) return null;
+
+      let silo = world.structures.find((s) => s.side === world.humanSide && s.kind === "nukesilo");
+      if (!silo) {
+        for (let r = 3; r <= 8 && !silo; r++) {
+          for (let dy = -r; dy <= r && !silo; dy++) {
+            for (let dx = -r; dx <= r && !silo; dx++) {
+              if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+              silo =
+                world.spawnStructure("nukesilo", world.humanSide, home.tx + dx, home.ty + dy, true) ??
+                undefined;
+            }
+          }
+        }
+      }
+      if (!silo) return null;
+
+      // Enough generation to keep a 150-power silo online, then fill the charge.
+      world.spawnStructure("power", world.humanSide, home.tx - 3, home.ty + 6, true);
+      world.spawnStructure("power", world.humanSide, home.tx - 3, home.ty + 9, true);
+      silo.charge = structureDef("nukesilo").superweaponCharge;
+
+      const target = world.structures.find((s) => s.side !== world.humanSide && !s.dead);
+      if (!target) return null;
+      const c = world.structureCenter(target);
+      // Reveal the target so the strike is actually visible; a player would have scouted it.
+      revealArea(world, c.x, c.y, 14);
+      camera.centerOn(c.x, c.y);
+      return { x: camera.worldToScreenX(c.x), y: camera.worldToScreenY(c.y) };
+    },
     wipeSide: (side) => {
       for (const u of world.units) if (u.side === side) u.dead = true;
       for (const s of world.structures) {

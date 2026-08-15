@@ -39,6 +39,13 @@ export const en = {
   briefingObjectivesLabel: "Objectives",
   briefingProceed: "Proceed",
   briefingBack: "Back",
+  briefingBody1:
+    "Comrade Commander. Allied forces have established a forward command post across the river and are already drawing ore from the contested fields. Command will not tolerate a second Cairo.",
+  briefingBody2:
+    "You have a Construction Yard, two generators and a refinery. Everything else is on you. Take the ore, build the machine, and grind their base into the dirt.",
+  briefingObjective1: "Establish an ore economy and expand the base",
+  briefingObjective2: "Build an armoured force and defend the perimeter",
+  briefingObjective3: "Destroy every Allied structure",
 
   // ── HUD ───────────────────────────────────────────────────────────────────
   hudCredits: "Credits",
