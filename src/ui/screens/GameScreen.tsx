@@ -138,7 +138,8 @@ export function GameScreen({
       controller.attach();
       const next: Engine = { game, camera, renderer, minimap, controller, icons };
       engineRef.current = next;
-      installTestBridge(game, camera);
+      const perf = { fps: 0, frameMs: 0, sampleCount: 0 };
+      installTestBridge(game, camera, perf);
       setEngine(next);
       setHud(snapshot(game));
 
@@ -154,6 +155,10 @@ export function GameScreen({
       const frame = (now: number) => {
         const dtMs = Math.min(250, now - last);
         last = now;
+        // Exponentially smoothed frame time; the perf regression test reads this.
+        perf.frameMs = perf.sampleCount === 0 ? dtMs : perf.frameMs * 0.9 + dtMs * 0.1;
+        perf.fps = perf.frameMs > 0 ? 1000 / perf.frameMs : 0;
+        perf.sampleCount++;
         controller.update(dtMs / 1000, getPrefs().edgeScroll);
 
         if (pausedRef.current) {

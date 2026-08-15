@@ -50,6 +50,10 @@ export interface RaTestBridge {
    * worth nuking, so the superweapon flow can be tested without a twenty-minute build-up.
    */
   armNuke(): { x: number; y: number } | null;
+  /** Rolling render statistics, for the performance regression test. */
+  perf(): { fps: number; frameMs: number; sampleCount: number };
+  /** Floods the map with `perSide` combat units on each side to profile a worst-case battle. */
+  stressTest(perSide: number): number;
 }
 
 declare global {
@@ -58,7 +62,13 @@ declare global {
   }
 }
 
-export function installTestBridge(game: Game, camera: Camera): void {
+export interface PerfStats {
+  fps: number;
+  frameMs: number;
+  sampleCount: number;
+}
+
+export function installTestBridge(game: Game, camera: Camera, perf: PerfStats): void {
   if (!import.meta.env.DEV) return;
   const world = game.world;
   window.__ra = {
@@ -194,6 +204,25 @@ export function installTestBridge(game: Game, camera: Camera): void {
       revealArea(world, c.x, c.y, 14);
       camera.centerOn(c.x, c.y);
       return { x: camera.worldToScreenX(c.x), y: camera.worldToScreenY(c.y) };
+    },
+    perf: () => ({ ...perf }),
+    stressTest: (perSide: number) => {
+      const home = world.structures.find(
+        (s) => s.side === world.humanSide && s.kind === "conyard" && !s.dead,
+      );
+      if (!home) return 0;
+      const cx = (home.tx + 6) * TILE;
+      const cy = (home.ty + 2) * TILE;
+      let spawned = 0;
+      const columns = 16;
+      for (let i = 0; i < perSide; i++) {
+        const ox = (i % columns) * 22;
+        const oy = Math.floor(i / columns) * 22;
+        world.spawnUnit("3tnk", "soviet", cx - 380 + ox, cy - 160 + oy, 0);
+        world.spawnUnit("2tnk", "allied", cx + 120 + ox, cy - 160 + oy, Math.PI);
+        spawned += 2;
+      }
+      return spawned;
     },
     wipeSide: (side) => {
       for (const u of world.units) if (u.side === side) u.dead = true;
