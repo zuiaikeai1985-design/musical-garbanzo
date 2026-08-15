@@ -22,6 +22,15 @@ export class Grid {
   /** Number of units currently standing on the tile — used as a soft path cost. */
   readonly unitCount: Uint8Array;
 
+  /**
+   * Index of every tile that currently holds ore.
+   *
+   * Ore is sparse (a few hundred tiles out of five thousand), so regrowth, AI expansion scoring
+   * and "is there anything left to mine" checks would all be wasteful full-map scans without it.
+   */
+  private readonly oreTiles = new Set<number>();
+  private oreTileCache: number[] | null = null;
+
   constructor(width: number, height: number) {
     this.width = width;
     this.height = height;
@@ -94,6 +103,38 @@ export class Grid {
     this.oreKind[i] = kind;
     this.ore[i] = Math.max(0, Math.min(MAX_ORE_DENSITY, density));
     if (this.ore[i] === 0) this.oreKind[i] = OreKind.None;
+    this.syncOreIndex(i);
+  }
+
+  /** Directly adjusts a tile's density (used by ore regrowth) while keeping the index in sync. */
+  addOre(tx: number, ty: number, amount: number): void {
+    const i = this.index(tx, ty);
+    this.ore[i] = Math.max(0, Math.min(MAX_ORE_DENSITY, this.ore[i] + amount));
+    if (this.ore[i] === 0) this.oreKind[i] = OreKind.None;
+    this.syncOreIndex(i);
+  }
+
+  private syncOreIndex(i: number): void {
+    const had = this.oreTiles.has(i);
+    if (this.ore[i] > 0) {
+      if (!had) {
+        this.oreTiles.add(i);
+        this.oreTileCache = null;
+      }
+    } else if (had) {
+      this.oreTiles.delete(i);
+      this.oreTileCache = null;
+    }
+  }
+
+  /** Snapshot of every tile index holding ore. Cached until the ore set changes. */
+  oreTileIndices(): readonly number[] {
+    if (!this.oreTileCache) this.oreTileCache = [...this.oreTiles];
+    return this.oreTileCache;
+  }
+
+  get oreTileCount(): number {
+    return this.oreTiles.size;
   }
 
   getOre(tx: number, ty: number): number {
@@ -114,6 +155,7 @@ export class Grid {
     const kind = this.oreKind[i] as OreKind;
     this.ore[i]--;
     if (this.ore[i] === 0) this.oreKind[i] = OreKind.None;
+    this.syncOreIndex(i);
     return kind;
   }
 
@@ -126,6 +168,7 @@ export class Grid {
         // Building over ore destroys it, as in the original.
         this.ore[i] = 0;
         this.oreKind[i] = OreKind.None;
+        this.syncOreIndex(i);
       }
     }
   }

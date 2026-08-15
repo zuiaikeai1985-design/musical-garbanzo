@@ -141,6 +141,8 @@ export class World {
       cargoKind: OreKind.None,
       harvestState: HarvestState.Seeking,
       homeRefinery: 0,
+      oreTx: -1,
+      oreTy: -1,
       blockedTicks: 0,
       actionTimer: 0,
       dead: false,

@@ -295,6 +295,9 @@ export interface Unit {
   cargoKind: OreKind;
   harvestState: HarvestState;
   homeRefinery: EntityId;
+  /** Ore tile this harvester has claimed; -1 when it has none. */
+  oreTx: number;
+  oreTy: number;
   /** Ticks spent stuck; used to trigger a re-path or scatter. */
   blockedTicks: number;
   /** Ticks remaining of the unload/harvest animation. */
