@@ -165,8 +165,8 @@ stingers. The whole soundtrack is about 1 MB. Regenerate with `npm run audio` (r
 
 ```bash
 npm run lint       # tsc -b + eslint
-npm test           # 107 unit + headless simulation tests
-npm run test:e2e   # 26 Playwright tests against a real browser
+npm test           # 110 unit + headless simulation tests
+npm run test:e2e   # 27 Playwright tests against a real browser
 ```
 
 - **Unit tests** cover pathfinding (optimality, corner-cutting, partial paths, node budget), the
@@ -175,10 +175,17 @@ npm run test:e2e   # 26 Playwright tests against a real browser
 - **Simulation tests** run whole matches headless: a 30-minute stability soak with NaN and
   entity-count guards, AI base expansion and attack waves, difficulty separation, and a tick-budget
   check with 120 units in a battle.
+- **Playthrough tests** prove the mission is actually *winnable*. A scripted commander restricted
+  to the same public commands a human has (no micro, no focus fire, no repairing) plays a full
+  match: it wins on Recruit and Veteran and loses on Commissar. Run with `PLAYTHROUGH_DEBUG=1` for
+  a per-minute readout of structures, credits, army size and enemy buildings remaining — that
+  diagnostic is the tool to reach for when the balance numbers are next touched.
 - **End-to-end tests** drive a real browser: building a base through the sidebar, a live firefight,
   the harvester economy, fog of war, the nuclear strike, pause/resume, both languages, and a
   frame-rate regression guard.
 
 ## Status
 
-Mission 01 *Operation Iron Curtain* is complete and playable start to finish on three difficulties.
+Mission 01 *Operation Iron Curtain* is complete and playable start to finish on three
+difficulties. Measured against the scripted-playthrough benchmark: Veteran is won in roughly
+twenty minutes by competent play, Commissar is not.
