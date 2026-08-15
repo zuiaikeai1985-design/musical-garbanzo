@@ -1,13 +1,21 @@
+import { unitDef } from "../rules";
 import { GameStatus, type Side } from "../types";
 import type { World } from "../world";
 
-/** A side is beaten once it has no structures and no units left to rebuild with. */
+/**
+ * A side is beaten once it has no buildings and nothing left that could fight back or rebuild.
+ *
+ * A surviving Ore Truck deliberately does *not* count: letting a lone harvester keep a wiped-out
+ * player "alive" turns the endgame into an unwinnable hide-and-seek across seventy tiles.
+ */
 function isEliminated(world: World, side: Side): boolean {
   for (const s of world.structures) {
     if (s.side === side && !s.dead) return false;
   }
   for (const u of world.units) {
-    if (u.side === side && !u.dead) return false;
+    if (u.side !== side || u.dead) continue;
+    const def = unitDef(u.kind);
+    if (def.weapon !== null || u.kind === "mcv") return false;
   }
   return true;
 }

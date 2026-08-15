@@ -21,9 +21,11 @@ export const m01IronCurtain: MissionDef = {
   cameraStart: { tx: SOVIET_BASE.tx - 4, ty: SOVIET_BASE.ty - 6 },
   ai: {
     incomeMultiplier: 1,
-    waveInterval: 60 * 30,
-    minWaveInterval: 24 * 30,
-    firstWaveStrength: 900,
+    // The first wave lands around the two-and-a-half minute mark, which is long enough for the
+    // player to get a refinery and a barracks up but short enough to keep the pressure on.
+    waveInterval: 150 * 30,
+    minWaveInterval: 50 * 30,
+    firstWaveStrength: 1100,
     waveStrengthGrowth: 450,
     maxHarvesters: 3,
   },

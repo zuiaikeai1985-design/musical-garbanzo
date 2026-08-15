@@ -4,6 +4,7 @@ import type { EngineEvent, SoundCue } from "./events";
 import { Grid } from "./grid";
 import { Pathfinder } from "./pathfinding";
 import { structureDef, unitDef } from "./rules";
+import type { AiState } from "./systems/ai";
 import { Rng } from "./util/rng";
 import { SpatialHash } from "./util/spatial";
 import { tileToWorldX, tileToWorldY } from "./util/vec";
@@ -86,6 +87,9 @@ export class World {
 
   /** Tick of the last "our base is under attack" warning, used to rate-limit it. */
   lastAttackWarningTick = -9999;
+
+  /** State for the computer opponent, created by `Game` for the non-human side. */
+  ai: AiState | null = null;
 
   pendingNuke: PendingNuke | null = null;
   /** Set while a Missile Silo is charged and the player is choosing a target. */

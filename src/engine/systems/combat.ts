@@ -13,6 +13,7 @@ import {
 } from "../types";
 import { angleDelta, dist, turnToward } from "../util/vec";
 import type { World } from "../world";
+import { notifyAiThreat } from "./ai";
 import { destroyStructure } from "./production";
 
 /** How closely a gun must be pointed at its target before it will fire, in radians. */
@@ -373,6 +374,11 @@ export function applyDamage(
 
   if (isStructure(target)) {
     warnBaseUnderAttack(world, target);
+  }
+  // Let the computer opponent know it is being shot at so it can recall defenders.
+  if (world.ai && target.side === world.ai.side) {
+    const centre = world.entityCenter(target);
+    notifyAiThreat(world, target.side, centre.x, centre.y);
   }
 
   if (target.hp > 0) return;

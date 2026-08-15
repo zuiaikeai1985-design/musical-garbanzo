@@ -2,6 +2,7 @@ import { PATH_BUDGET_PER_TICK } from "./constants";
 import type { Command } from "./commands";
 import { GameStatus, type Difficulty, type EntityId } from "./types";
 import { World } from "./world";
+import { aiSystem, createAiState } from "./systems/ai";
 import { combatSystem } from "./systems/combat";
 import { harvestingSystem } from "./systems/harvesting";
 import { projectileSystem } from "./systems/projectiles";
@@ -36,6 +37,11 @@ export class Game {
     this.world.players.soviet.credits = mission.startCredits.soviet;
     this.world.players.allied.credits = mission.startCredits.allied;
     mission.build(this.world);
+    this.world.ai = createAiState(
+      this.world.humanSide === "soviet" ? "allied" : "soviet",
+      mission.ai,
+      difficulty,
+    );
     // Establish the initial power balance so nothing spends its first tick browned out.
     powerSystem(this.world);
   }
@@ -64,6 +70,7 @@ export class Game {
 
     this.processCommands();
 
+    aiSystem(world);
     orderSystem(world);
     harvestingSystem(world);
     movementSystem(world);

@@ -66,7 +66,10 @@ export function orderSystem(world: World): void {
 
     // Service a pending path request for any order type.
     if (u.pathPending && u.destTx >= 0) {
-      const goalRadius = u.order.type === "attack" || u.order.type === "harvest" ? 3 : 1;
+      // A destination inside a building footprint (right-clicking a structure, or an AI attack
+      // objective) has no walkable goal tile. Allowing the goal to relocate a couple of tiles
+      // means the order becomes "get next to that thing" instead of being dropped outright.
+      const goalRadius = u.order.type === "attack" || u.order.type === "harvest" ? 3 : 2;
       const result = requestPath(world, u, u.destTx, u.destTy, { goalRadius });
       if (result === "ok") {
         u.pathPending = false;
