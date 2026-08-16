@@ -1,5 +1,5 @@
 import "./styles.css";
-import { Game } from "./core/game";
+import { Game, type Quality } from "./core/game";
 import type { Difficulty } from "./core/types";
 
 function el<T extends HTMLElement>(id: string): T {
@@ -15,6 +15,7 @@ const gameover = el("gameover");
 const loading = el("loading");
 
 const difficultySelect = el<HTMLSelectElement>("difficulty");
+const qualitySelect = el<HTMLSelectElement>("quality");
 const sensitivitySlider = el<HTMLInputElement>("sensitivity");
 const sensitivityValue = el("sensitivity-value");
 const sensitivityPause = el<HTMLInputElement>("sensitivity-pause");
@@ -34,10 +35,12 @@ function loadSettings(): void {
       sensitivity?: number;
       fov?: number;
       difficulty?: Difficulty;
+      quality?: Quality;
     };
     if (parsed.sensitivity) sensitivitySlider.value = String(parsed.sensitivity);
     if (parsed.fov) fovSlider.value = String(parsed.fov);
     if (parsed.difficulty) difficultySelect.value = parsed.difficulty;
+    if (parsed.quality) qualitySelect.value = parsed.quality;
   } catch {
     // Ignore malformed or unavailable storage.
   }
@@ -47,15 +50,16 @@ function syncSettings(): void {
   const sensitivity = Number(sensitivitySlider.value);
   const fov = Number(fovSlider.value);
   const difficulty = difficultySelect.value as Difficulty;
+  const quality = qualitySelect.value as Quality;
 
   sensitivityValue.textContent = sensitivity.toFixed(1);
   sensitivityPauseValue.textContent = sensitivity.toFixed(1);
   sensitivityPause.value = String(sensitivity);
   fovValue.textContent = String(fov);
 
-  game.applySettings({ sensitivity, fov, difficulty });
+  game.applySettings({ sensitivity, fov, difficulty, quality });
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ sensitivity, fov, difficulty }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ sensitivity, fov, difficulty, quality }));
   } catch {
     // Storage may be blocked; settings simply will not persist.
   }
@@ -67,6 +71,7 @@ syncSettings();
 sensitivitySlider.addEventListener("input", syncSettings);
 fovSlider.addEventListener("input", syncSettings);
 difficultySelect.addEventListener("change", syncSettings);
+qualitySelect.addEventListener("change", syncSettings);
 sensitivityPause.addEventListener("input", () => {
   sensitivitySlider.value = sensitivityPause.value;
   syncSettings();

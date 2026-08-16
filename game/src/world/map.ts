@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import {
   concreteTexture,
   crateTexture,
@@ -10,6 +11,7 @@ import {
 
 export interface GameMap {
   group: THREE.Group;
+  sun: THREE.DirectionalLight;
   colliders: THREE.Box3[];
   playerSpawn: THREE.Vector3;
   playerSpawnYaw: number;
@@ -33,9 +35,19 @@ class MapBuilder {
   readonly colliders: THREE.Box3[] = [];
 
   private readonly materials = new Map<string, THREE.Material>();
+  /** Static geometry is batched per material and merged into one mesh each. */
+  private readonly batches = new Map<string, { material: THREE.Material; geometries: THREE.BufferGeometry[] }>();
+
+  private materialKey(
+    kind: NonNullable<BlockOptions["texture"]>,
+    color: number,
+    repeat: [number, number],
+  ): string {
+    return `${kind}:${color}:${repeat[0]}:${repeat[1]}`;
+  }
 
   private material(kind: NonNullable<BlockOptions["texture"]>, color: number, repeat: [number, number]): THREE.Material {
-    const key = `${kind}:${color}:${repeat[0]}:${repeat[1]}`;
+    const key = this.materialKey(kind, color, repeat);
     const existing = this.materials.get(key);
     if (existing) return existing;
 
@@ -72,7 +84,7 @@ class MapBuilder {
     h: number,
     d: number,
     options: BlockOptions = {},
-  ): THREE.Mesh {
+  ): void {
     const {
       texture = "concrete",
       color = 0xffffff,
@@ -83,14 +95,17 @@ class MapBuilder {
       Math.max(1, Math.round(Math.max(w, d) / 2.5)),
       Math.max(1, Math.round(h / 2.5)),
     ];
-    const mesh = new THREE.Mesh(
-      new THREE.BoxGeometry(w, h, d),
-      this.material(texture, color, scale),
-    );
-    mesh.position.set(x, y + h / 2, z);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    this.group.add(mesh);
+
+    const geometry = new THREE.BoxGeometry(w, h, d);
+    geometry.translate(x, y + h / 2, z);
+
+    const key = this.materialKey(texture, color, scale);
+    let batch = this.batches.get(key);
+    if (!batch) {
+      batch = { material: this.material(texture, color, scale), geometries: [] };
+      this.batches.set(key, batch);
+    }
+    batch.geometries.push(geometry);
 
     if (collider) {
       this.colliders.push(
@@ -100,7 +115,20 @@ class MapBuilder {
         ),
       );
     }
-    return mesh;
+  }
+
+  /** Merges every batch so the whole level renders in a handful of draw calls. */
+  finalize(): void {
+    for (const batch of this.batches.values()) {
+      const merged = mergeGeometries(batch.geometries, false);
+      if (!merged) continue;
+      for (const geometry of batch.geometries) geometry.dispose();
+      const mesh = new THREE.Mesh(merged, batch.material);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      this.group.add(mesh);
+    }
+    this.batches.clear();
   }
 
   ramp(
@@ -292,12 +320,11 @@ export function buildMap(scene: THREE.Scene): GameMap {
     roughness: 0.7,
     metalness: 0.3,
   });
+  const barrelGeometries: THREE.BufferGeometry[] = [];
   for (const [x, z] of barrelPositions) {
-    const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 1.5, 16), barrelMat);
-    barrel.position.set(x, 0.75, z);
-    barrel.castShadow = true;
-    barrel.receiveShadow = true;
-    builder.group.add(barrel);
+    const geometry = new THREE.CylinderGeometry(0.55, 0.55, 1.5, 14);
+    geometry.translate(x, 0.75, z);
+    barrelGeometries.push(geometry);
     builder.colliders.push(
       new THREE.Box3(
         new THREE.Vector3(x - 0.55, 0, z - 0.55),
@@ -305,7 +332,15 @@ export function buildMap(scene: THREE.Scene): GameMap {
       ),
     );
   }
+  const mergedBarrels = mergeGeometries(barrelGeometries, false);
+  if (mergedBarrels) {
+    const barrels = new THREE.Mesh(mergedBarrels, barrelMat);
+    barrels.castShadow = true;
+    barrels.receiveShadow = true;
+    builder.group.add(barrels);
+  }
 
+  builder.finalize();
   scene.add(builder.group);
   sun.target.position.set(0, 0, 0);
 
@@ -343,6 +378,7 @@ export function buildMap(scene: THREE.Scene): GameMap {
 
   return {
     group: builder.group,
+    sun,
     colliders: builder.colliders,
     playerSpawn: new THREE.Vector3(2, 0, 27),
     playerSpawnYaw: Math.PI,

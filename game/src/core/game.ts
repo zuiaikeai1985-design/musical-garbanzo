@@ -27,10 +27,13 @@ interface Stats {
   deaths: number;
 }
 
+export type Quality = "auto" | "low" | "medium" | "high";
+
 export interface Settings {
   sensitivity: number;
   fov: number;
   difficulty: Difficulty;
+  quality: Quality;
 }
 
 const SLOT_KEYS: Record<string, WeaponId> = {
@@ -45,7 +48,7 @@ export class Game {
   private readonly renderer: THREE.WebGLRenderer;
   private readonly scene = new THREE.Scene();
   private readonly camera: THREE.PerspectiveCamera;
-  private readonly clock = new THREE.Clock();
+  private lastFrameTime = performance.now();
 
   private readonly input: Input;
   private readonly audio = new AudioEngine();
@@ -68,7 +71,16 @@ export class Game {
   private intermissionTimer = 0;
 
   private state: GameState = "menu";
-  private settings: Settings = { sensitivity: 2, fov: 90, difficulty: "normal" };
+  private settings: Settings = {
+    sensitivity: 2,
+    fov: 90,
+    difficulty: "normal",
+    quality: "auto",
+  };
+  private activeQuality: Exclude<Quality, "auto"> = "high";
+  private renderScale = 1;
+  private qualitySampleTime = 0;
+  private qualitySampleFrames = 0;
   private stats: Stats = { kills: 0, headshots: 0, shots: 0, hits: 0, damage: 0, deaths: 0 };
 
   private aiming = false;
@@ -85,7 +97,7 @@ export class Game {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
@@ -117,16 +129,103 @@ export class Game {
     this.hud.setActiveWeapon(this.currentWeapon);
 
     window.addEventListener("resize", this.onResize);
-    this.clock.start();
     requestAnimationFrame(this.loop);
   }
 
   // ---------------------------------------------------------------- lifecycle
 
   applySettings(settings: Partial<Settings>): void {
+    const previousQuality = this.settings.quality;
     this.settings = { ...this.settings, ...settings };
     this.camera.fov = this.settings.fov;
     this.camera.updateProjectionMatrix();
+
+    if (this.settings.quality !== previousQuality || settings.quality !== undefined) {
+      this.applyQuality(
+        this.settings.quality === "auto" ? this.activeQuality : this.settings.quality,
+      );
+      this.qualitySampleTime = 0;
+      this.qualitySampleFrames = 0;
+    }
+  }
+
+  /** Shadow resolution and render scale, tuned for the current hardware. */
+  private applyQuality(level: Exclude<Quality, "auto">): void {
+    this.activeQuality = level;
+    const dpr = Math.min(window.devicePixelRatio, 2);
+    const sun = this.map.sun;
+
+    const previousShadows = this.renderer.shadowMap.enabled;
+    const setShadow = (size: number | null): void => {
+      if (size === null) {
+        this.renderer.shadowMap.enabled = false;
+        sun.castShadow = false;
+        return;
+      }
+      this.renderer.shadowMap.enabled = true;
+      sun.castShadow = true;
+      if (sun.shadow.mapSize.x !== size) {
+        sun.shadow.mapSize.set(size, size);
+        sun.shadow.map?.dispose();
+        sun.shadow.map = null;
+      }
+    };
+
+    switch (level) {
+      case "high":
+        setShadow(2048);
+        this.renderScale = dpr;
+        break;
+      case "medium":
+        setShadow(1024);
+        this.renderScale = Math.min(dpr, 1);
+        break;
+      case "low":
+        setShadow(null);
+        this.renderScale = Math.min(this.renderScale, 0.7);
+        break;
+    }
+    this.renderer.setPixelRatio(this.renderScale);
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+
+    // Toggling shadows changes the shader defines, so materials must recompile.
+    if (previousShadows !== this.renderer.shadowMap.enabled) {
+      this.scene.traverse((object) => {
+        if (object instanceof THREE.Mesh) {
+          const material = object.material as THREE.Material | THREE.Material[];
+          if (Array.isArray(material)) material.forEach((m) => (m.needsUpdate = true));
+          else material.needsUpdate = true;
+        }
+      });
+    }
+    this.onQualityChanged?.(level);
+  }
+
+  onQualityChanged: ((level: Exclude<Quality, "auto">) => void) | null = null;
+
+  /**
+   * In auto mode, step the quality down when the frame rate is poor and, once
+   * effects are already off, keep scaling the render resolution down.
+   */
+  private updateAdaptiveQuality(rawDt: number): void {
+    if (this.settings.quality !== "auto") return;
+    this.qualitySampleTime += rawDt;
+    this.qualitySampleFrames++;
+    if (this.qualitySampleTime < 1.5) return;
+
+    const fps = this.qualitySampleFrames / this.qualitySampleTime;
+    this.qualitySampleTime = 0;
+    this.qualitySampleFrames = 0;
+
+    if (this.activeQuality === "high") {
+      if (fps < 45) this.applyQuality("medium");
+    } else if (this.activeQuality === "medium") {
+      if (fps < 35) this.applyQuality("low");
+    } else if (fps < 28 && this.renderScale > 0.4) {
+      this.renderScale = Math.max(0.4, this.renderScale - 0.15);
+      this.renderer.setPixelRatio(this.renderScale);
+      this.renderer.setSize(window.innerWidth, window.innerHeight);
+    }
   }
 
   get currentSettings(): Settings {
@@ -597,10 +696,17 @@ export class Game {
 
   private readonly loop = (): void => {
     requestAnimationFrame(this.loop);
-    const dt = Math.min(this.clock.getDelta(), 0.05);
+    const now = performance.now();
+    const rawDt = (now - this.lastFrameTime) / 1000;
+    const dt = Math.min(rawDt, 0.05);
+    this.lastFrameTime = now;
 
-    if (this.state === "playing") this.updatePlaying(dt);
-    else this.effects.update(dt);
+    if (this.state === "playing") {
+      this.updateAdaptiveQuality(rawDt);
+      this.updatePlaying(dt);
+    } else {
+      this.effects.update(dt);
+    }
 
     this.hud.update(dt);
     this.renderer.render(this.scene, this.camera);

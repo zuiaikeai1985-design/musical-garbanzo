@@ -89,6 +89,7 @@ export class Bot {
   private sawPlayer = false;
   private burstTimer = 0;
   private restTimer = 0;
+  private shotsInBurst = 0;
   private fireCooldown = 0;
   private strafeDir = 1;
   private strafeTimer = 0;
@@ -282,7 +283,10 @@ export class Bot {
     aimPoint.y -= 0.25 + Math.random() * 0.3;
     const dir = aimPoint.sub(origin).normalize();
 
-    const spreadRad = THREE.MathUtils.degToRad(this.profile.aimSpread);
+    // Accuracy degrades through a burst, the way recoil does for the player.
+    const burstPenalty = 1 + Math.min(this.shotsInBurst, 6) * 0.32;
+    const spreadRad = THREE.MathUtils.degToRad(this.profile.aimSpread * burstPenalty);
+    this.shotsInBurst++;
     dir.applyAxisAngle(new THREE.Vector3(0, 1, 0), (Math.random() - 0.5) * spreadRad * 2);
     dir.applyAxisAngle(
       new THREE.Vector3(1, 0, 0).cross(dir).normalize().negate(),
@@ -495,6 +499,7 @@ export class Bot {
         } else {
           const [bl, bh] = this.profile.burst;
           this.burstTimer = bl + Math.random() * (bh - bl);
+          this.shotsInBurst = 0;
           // Fire the first round of the burst immediately.
           this.fire(world);
           this.fireCooldown = 0.1;
