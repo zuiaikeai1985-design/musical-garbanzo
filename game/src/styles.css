@@ -296,11 +296,13 @@ body {
 }
 
 .kill-entry {
-  background: rgba(8, 10, 14, 0.65);
+  background: rgba(8, 10, 14, 0.86);
   border-left: 3px solid var(--accent);
-  padding: 4px 10px;
-  font-size: 14px;
+  padding: 5px 12px;
+  font-size: 17px;
+  font-weight: 600;
   letter-spacing: 0.5px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
   animation: slideIn 0.18s ease-out;
 }
 
