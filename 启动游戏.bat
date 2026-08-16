@@ -1,58 +1,62 @@
 @echo off
-rem ============================================================
-rem  çº¢è‰²è­¦æŠ¥ RED ALERT - Windows one-click launcher
-rem  Double-click this file to install (first run only) and play.
-rem ============================================================
-chcp 65001 >nul
-title çº¢è‰²è­¦æŠ¥ RED ALERT
+setlocal
+title RED ALERT
 cd /d "%~dp0"
 
 where node >nul 2>nul
-if errorlevel 1 (
-  echo.
-  echo  [X] æ²¡æœ‰æ£€æµ‹åˆ° Node.js / Node.js not found
-  echo.
-  echo      è¯·å…ˆå®‰è£… Node.jsï¼ˆå…è´¹ï¼Œè£…ä¸€æ¬¡å°±è¡Œï¼‰:
-  echo      1. æ‰“å¼€ç½‘å€  https://nodejs.org/zh-cn
-  echo      2. ç‚¹ç»¿è‰²çš„ä¸‹è½½æŒ‰é’®ï¼Œä¸‹è½½ååŒå‡»å®‰è£…
-  echo      3. å®‰è£…æ—¶ä¸€è·¯ç‚¹"ä¸‹ä¸€æ­¥"å³å¯
-  echo      4. è£…å¥½åï¼Œå†å›æ¥åŒå‡»æœ¬æ–‡ä»¶
-  echo.
-  pause
-  exit /b 1
-)
+if errorlevel 1 goto NONODE
 
-if not exist node_modules (
-  echo.
-  echo  ç¬¬ä¸€æ¬¡è¿è¡Œï¼Œæ­£åœ¨è‡ªåŠ¨å®‰è£…ï¼ˆå¤§çº¦ 1-2 åˆ†é’Ÿï¼Œåªéœ€è¦è£…è¿™ä¸€æ¬¡ï¼‰...
-  echo  First run: installing, about 1-2 minutes...
-  echo.
-  call npm install --no-audit --no-fund
-  if errorlevel 1 (
-    echo.
-    echo  é»˜è®¤ä¸‹è½½ç‚¹è¿ä¸ä¸Šï¼Œè‡ªåŠ¨æ”¹ç”¨å›½å†…é•œåƒé‡è¯•... / retrying with the China mirror...
-    echo.
-    call npm install --no-audit --no-fund --registry=https://registry.npmmirror.com
-  )
-  if errorlevel 1 (
-    echo.
-    echo  [X] å®‰è£…å¤±è´¥ï¼Œè¯·æ£€æŸ¥ç½‘ç»œåé‡æ–°åŒå‡»æœ¬æ–‡ä»¶ / install failed, check network and retry
-    pause
-    exit /b 1
-  )
-)
+if exist "node_modules\.bin\vite.cmd" goto RUN
 
 echo.
-echo  æ­£åœ¨å¯åŠ¨æ¸¸æˆ... æµè§ˆå™¨å‡ ç§’åä¼šè‡ªåŠ¨æ‰“å¼€
-echo  Starting... your browser will open in a few seconds
+echo  [1/2] µÚÒ»´ÎÔËĞĞ, ÕıÔÚ°²×°ÓÎÏ·ÎÄ¼ş, ´óÔ¼ 1-2 ·ÖÖÓ, ÇëµÈËüÅÜÍê...
+echo        First run: installing, about 1-2 minutes...
 echo.
-echo  ============================================
-echo   ç©çš„æ—¶å€™è¯·ä¸è¦å…³é—­è¿™ä¸ªé»‘è‰²çª—å£ï¼
-echo   Keep this window open while playing!
-echo   ï¼ˆä¸ç©äº†ç›´æ¥å…³æ‰è¿™ä¸ªçª—å£å°±è¡Œï¼‰
-echo  ============================================
-echo.
+call npm install --no-audit --no-fund
+if exist "node_modules\.bin\vite.cmd" goto RUN
 
+echo.
+echo  ¹úÍâ·şÎñÆ÷Á¬²»ÉÏ, ×Ô¶¯»»¹úÄÚ¾µÏñÖØĞÂ°²×°...
+echo  Retrying with the China mirror...
+echo.
+call npm install --no-audit --no-fund --registry=https://registry.npmmirror.com
+if exist "node_modules\.bin\vite.cmd" goto RUN
+goto FAIL
+
+:RUN
+echo.
+echo  [2/2] ÕıÔÚÆô¶¯ÓÎÏ·... ä¯ÀÀÆ÷¼¸Ãëºó»á×Ô¶¯´ò¿ª
+echo        Starting... the browser opens in a few seconds
+echo.
+echo  ==========================================
+echo   ÍæµÄÊ±ºò²»Òª¹ØÕâ¸öºÚÉ«´°¿Ú!
+echo   KEEP THIS WINDOW OPEN WHILE PLAYING
+echo   ²»ÍæÁËÖ±½Ó¹ØµôÕâ¸ö´°¿Ú¼´¿É
+echo  ==========================================
+echo.
 start "" cmd /c "timeout /t 6 >nul & start http://127.0.0.1:5173"
 call npm run dev
+echo.
+echo  ÓÎÏ·ÒÑÍ£Ö¹ / game stopped
 pause
+exit /b 0
+
+:NONODE
+echo.
+echo  [X] »¹Ã»ÓĞ°²×° Node.js / Node.js not found
+echo.
+echo      1. ´ò¿ªÍøÖ·  https://nodejs.org/zh-cn
+echo      2. µãÂÌÉ«°´Å¥ÏÂÔØ, Ë«»÷°²×°, Ò»Â·µã"ÏÂÒ»²½"
+echo      3. ×°ºÃºóÔÙË«»÷±¾ÎÄ¼ş
+echo.
+pause
+exit /b 1
+
+:FAIL
+echo.
+echo  [X] °²×°Ê§°Ü / install failed
+echo      Çë¼ì²éµçÄÔÄÜ²»ÄÜÉÏÍø, È»ºóÖØĞÂË«»÷±¾ÎÄ¼ş
+echo      Èç¹ûÒ»Ö±Ê§°Ü, °ÑÕâ¸ö´°¿Ú½ØÍ¼·¢¸ø¿ª·¢Õß
+echo.
+pause
+exit /b 1
