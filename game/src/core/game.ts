@@ -34,6 +34,8 @@ export interface Settings {
   fov: number;
   difficulty: Difficulty;
   quality: Quality;
+  /** Show a marker above enemies that currently have line of sight on you. */
+  markers: boolean;
 }
 
 const SLOT_KEYS: Record<string, WeaponId> = {
@@ -76,6 +78,7 @@ export class Game {
     fov: 90,
     difficulty: "normal",
     quality: "auto",
+    markers: true,
   };
   private activeQuality: Exclude<Quality, "auto"> = "high";
   private renderScale = 1;
@@ -795,6 +798,7 @@ export class Game {
         box: this.player.box,
       },
       listener: this.camera,
+      showMarkers: this.settings.markers,
       damagePlayer: this.damagePlayer,
     };
 

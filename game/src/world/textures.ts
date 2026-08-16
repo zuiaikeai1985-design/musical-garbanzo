@@ -222,6 +222,27 @@ export function sparkTexture(): THREE.Texture {
   );
 }
 
+export function markerTexture(): THREE.Texture {
+  return makeTexture(
+    "marker",
+    64,
+    (ctx, size) => {
+      ctx.clearRect(0, 0, size, size);
+      ctx.beginPath();
+      ctx.moveTo(size * 0.5, size * 0.86);
+      ctx.lineTo(size * 0.16, size * 0.2);
+      ctx.lineTo(size * 0.84, size * 0.2);
+      ctx.closePath();
+      ctx.fillStyle = "rgba(229,72,77,0.92)";
+      ctx.fill();
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = "rgba(10,10,12,0.9)";
+      ctx.stroke();
+    },
+    new THREE.Vector2(1, 1),
+  );
+}
+
 export function skyTexture(): THREE.Texture {
   return makeTexture(
     "sky",

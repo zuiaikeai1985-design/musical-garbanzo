@@ -3,6 +3,7 @@ import { moveAxisAligned, rayBox, rayBoxes, tryStepUp } from "../world/collision
 import type { DifficultyProfile, HitPart, HitResult } from "../core/types";
 import type { Effects } from "./effects";
 import type { AudioEngine } from "../core/audio";
+import { markerTexture } from "../world/textures";
 
 export interface BotWorld {
   colliders: readonly THREE.Box3[];
@@ -19,6 +20,8 @@ export interface BotWorld {
   };
   /** Camera position, used for stereo panning of bot gunfire. */
   listener: THREE.Object3D;
+  /** Draws a marker above bots that currently have eyes on the player. */
+  showMarkers: boolean;
   damagePlayer: (amount: number, from: THREE.Vector3, botName: string) => void;
 }
 
@@ -41,6 +44,8 @@ const BOT_NAMES = [
 
 const HALF_EXTENTS = new THREE.Vector3(0.32, 0.9, 0.32);
 const EYE_HEIGHT = 1.55;
+/** Bots ignore the player beyond this range, so long sightlines stay playable. */
+const VISION_RANGE = 48;
 
 const SKIN = new THREE.MeshStandardMaterial({ color: 0xc79a6c, roughness: 0.85 });
 const SHIRT = new THREE.MeshStandardMaterial({ color: 0x7d3b34, roughness: 0.9 });
@@ -48,6 +53,7 @@ const VEST = new THREE.MeshStandardMaterial({ color: 0x33302a, roughness: 0.8, m
 const PANTS = new THREE.MeshStandardMaterial({ color: 0x4a4636, roughness: 0.95 });
 const BOOT = new THREE.MeshStandardMaterial({ color: 0x22201c, roughness: 0.95 });
 const GUN = new THREE.MeshStandardMaterial({ color: 0x23262a, roughness: 0.5, metalness: 0.6 });
+const BERET = new THREE.MeshStandardMaterial({ color: 0xa8231f, roughness: 0.85 });
 
 function part(
   w: number,
@@ -108,6 +114,7 @@ export class Bot {
   private readonly rightLeg: THREE.Mesh;
   private readonly leftArm: THREE.Mesh;
   private readonly muzzle = new THREE.Object3D();
+  private readonly marker: THREE.Sprite;
 
   constructor(spawn: THREE.Vector3, private readonly profile: DifficultyProfile) {
     this.name = BOT_NAMES[nameCursor++ % BOT_NAMES.length];
@@ -139,6 +146,16 @@ export class Bot {
     this.group.add(part(0.21, 0.1, 0.3, BOOT, -0.13, 0.05, 0.03));
     this.group.add(part(0.21, 0.1, 0.3, BOOT, 0.13, 0.05, 0.03));
     this.group.add(this.torso);
+    // Red beret keeps enemies readable against the sand.
+    this.torso.add(part(0.27, 0.08, 0.27, BERET, 0, 1.72, 0));
+
+    this.marker = new THREE.Sprite(
+      new THREE.SpriteMaterial({ map: markerTexture(), transparent: true, depthWrite: false }),
+    );
+    this.marker.scale.set(0.34, 0.34, 0.34);
+    this.marker.position.set(0, 2.12, 0);
+    this.marker.visible = false;
+    this.group.add(this.marker);
 
     this.syncTransform();
     this.updateHitboxes();
@@ -227,7 +244,7 @@ export class Bot {
     const eye = this.eye;
     const to = world.player.eye.clone().sub(eye);
     const distance = to.length();
-    if (distance > 75) return false;
+    if (distance > VISION_RANGE) return false;
     to.normalize();
 
     const forward = new THREE.Vector3(-Math.sin(this.yaw), 0, -Math.cos(this.yaw));
@@ -281,11 +298,17 @@ export class Bot {
     const origin = this.muzzle.getWorldPosition(new THREE.Vector3());
     const aimPoint = world.player.eye.clone();
     aimPoint.y -= 0.25 + Math.random() * 0.3;
-    const dir = aimPoint.sub(origin).normalize();
+    const dir = aimPoint.sub(origin);
+    const distance = dir.length();
+    dir.normalize();
 
-    // Accuracy degrades through a burst, the way recoil does for the player.
+    // Accuracy degrades through a burst, the way recoil does for the player,
+    // and with range so that long sightlines are survivable.
     const burstPenalty = 1 + Math.min(this.shotsInBurst, 6) * 0.32;
-    const spreadRad = THREE.MathUtils.degToRad(this.profile.aimSpread * burstPenalty);
+    const rangePenalty = 1 + Math.max(0, distance - 10) / 22;
+    const spreadRad = THREE.MathUtils.degToRad(
+      this.profile.aimSpread * burstPenalty * rangePenalty,
+    );
     this.shotsInBurst++;
     dir.applyAxisAngle(new THREE.Vector3(0, 1, 0), (Math.random() - 0.5) * spreadRad * 2);
     dir.applyAxisAngle(
@@ -303,7 +326,8 @@ export class Bot {
     let end = origin.clone().addScaledVector(dir, maxDistance);
     if (playerHit && (!worldHit || playerHit.distance < worldHit.distance)) {
       end = playerHit.point;
-      const damage = (22 + Math.random() * 12) * this.profile.damageScale;
+      const falloff = THREE.MathUtils.clamp(1 - (distance - 18) / 60, 0.45, 1);
+      const damage = (22 + Math.random() * 12) * this.profile.damageScale * falloff;
       world.damagePlayer(damage, this.position, this.name);
     } else if (worldHit) {
       end = worldHit.point;
@@ -313,20 +337,21 @@ export class Bot {
     world.effects.tracer(origin, end, 0.7);
 
     const listenerPos = world.listener.getWorldPosition(new THREE.Vector3());
-    const distance = listenerPos.distanceTo(origin);
+    const listenerDistance = listenerPos.distanceTo(origin);
     const right = new THREE.Vector3(1, 0, 0).applyQuaternion(world.listener.quaternion);
     const pan = THREE.MathUtils.clamp(
       origin.clone().sub(listenerPos).normalize().dot(right),
       -1,
       1,
     );
-    const volume = THREE.MathUtils.clamp(1 - distance / 60, 0.12, 1);
-    if (distance > 26) world.audio.distantShot(volume * 0.5, pan);
+    const volume = THREE.MathUtils.clamp(1 - listenerDistance / 60, 0.12, 1);
+    if (listenerDistance > 26) world.audio.distantShot(volume * 0.5, pan);
     else world.audio.gunshot("rifle", volume * 0.55, pan);
   }
 
   update(dt: number, world: BotWorld): void {
     if (!this.alive) {
+      this.marker.visible = false;
       this.deathTimer += dt;
       // Topple over, then sink into the ground and disappear.
       const fall = Math.min(1, this.deathTimer / 0.5);
@@ -340,13 +365,17 @@ export class Bot {
     }
 
     const visible = this.canSee(world);
+    this.marker.visible = world.showMarkers && visible;
     if (visible) {
       this.lastKnownPlayer.copy(world.player.position);
       this.hasLastKnown = true;
       if (!this.sawPlayer) {
         this.sawPlayer = true;
         const [lo, hi] = this.profile.reactionTime;
-        this.reactionTimer = lo + Math.random() * (hi - lo);
+        const distance = this.position.distanceTo(world.player.position);
+        // Spotting someone far away takes longer.
+        this.reactionTimer =
+          lo + Math.random() * (hi - lo) + Math.max(0, distance - 12) * 0.035;
       }
       this.state = "engage";
     } else {

@@ -16,6 +16,7 @@ const loading = el("loading");
 
 const difficultySelect = el<HTMLSelectElement>("difficulty");
 const qualitySelect = el<HTMLSelectElement>("quality");
+const markersCheckbox = el<HTMLInputElement>("markers");
 const sensitivitySlider = el<HTMLInputElement>("sensitivity");
 const sensitivityValue = el("sensitivity-value");
 const sensitivityPause = el<HTMLInputElement>("sensitivity-pause");
@@ -24,6 +25,11 @@ const fovSlider = el<HTMLInputElement>("fov");
 const fovValue = el("fov-value");
 
 const game = new Game(canvas);
+
+if (import.meta.env.DEV) {
+  // Handy for poking at the simulation from the dev tools console.
+  (window as unknown as { __game: Game }).__game = game;
+}
 
 const STORAGE_KEY = "operation-dust-settings";
 
@@ -36,11 +42,13 @@ function loadSettings(): void {
       fov?: number;
       difficulty?: Difficulty;
       quality?: Quality;
+      markers?: boolean;
     };
     if (parsed.sensitivity) sensitivitySlider.value = String(parsed.sensitivity);
     if (parsed.fov) fovSlider.value = String(parsed.fov);
     if (parsed.difficulty) difficultySelect.value = parsed.difficulty;
     if (parsed.quality) qualitySelect.value = parsed.quality;
+    if (typeof parsed.markers === "boolean") markersCheckbox.checked = parsed.markers;
   } catch {
     // Ignore malformed or unavailable storage.
   }
@@ -51,15 +59,16 @@ function syncSettings(): void {
   const fov = Number(fovSlider.value);
   const difficulty = difficultySelect.value as Difficulty;
   const quality = qualitySelect.value as Quality;
+  const markers = markersCheckbox.checked;
 
   sensitivityValue.textContent = sensitivity.toFixed(1);
   sensitivityPauseValue.textContent = sensitivity.toFixed(1);
   sensitivityPause.value = String(sensitivity);
   fovValue.textContent = String(fov);
 
-  game.applySettings({ sensitivity, fov, difficulty, quality });
+  game.applySettings({ sensitivity, fov, difficulty, quality, markers });
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ sensitivity, fov, difficulty, quality }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ sensitivity, fov, difficulty, quality, markers }));
   } catch {
     // Storage may be blocked; settings simply will not persist.
   }
@@ -72,6 +81,7 @@ sensitivitySlider.addEventListener("input", syncSettings);
 fovSlider.addEventListener("input", syncSettings);
 difficultySelect.addEventListener("change", syncSettings);
 qualitySelect.addEventListener("change", syncSettings);
+markersCheckbox.addEventListener("change", syncSettings);
 sensitivityPause.addEventListener("input", () => {
   sensitivitySlider.value = sensitivityPause.value;
   syncSettings();

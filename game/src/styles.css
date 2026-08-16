@@ -596,6 +596,24 @@ body {
   accent-color: var(--accent);
 }
 
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.checkbox-row input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.checkbox-row label {
+  margin-bottom: 0;
+  cursor: pointer;
+}
+
 .menu-row select {
   padding: 9px 10px;
   background: rgba(255, 255, 255, 0.05);
