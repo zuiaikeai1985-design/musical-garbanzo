@@ -124,7 +124,7 @@ const createEnemy = (scene: THREE.Scene, x: number, z: number, index: number) =>
     health: 100,
     alive: true,
     phase: index * 0.83,
-    nextShot: 1.2 + index * 0.18,
+    nextShot: 4 + index * 0.24,
     speed: 1.3 + (index % 3) * 0.12,
   };
   [...legs, body, armor, head, mask, rifle].forEach((part) => {
@@ -291,7 +291,7 @@ export const GameCanvas = ({
       [19, 1],
       [-17, 17],
       [17, 17],
-      [-2, -19],
+      [0, 10],
       [7, -18],
     ];
     const enemies = enemySpawns.map(([x, z], index) =>
@@ -541,9 +541,9 @@ export const GameCanvas = ({
           }
           enemy.group.lookAt(camera.position.x, enemy.group.position.y, camera.position.z);
 
-          if (distance < 24 && elapsed > enemy.nextShot) {
-            enemy.nextShot = elapsed + 1.25 + Math.random() * 1.15;
-            const accuracy = THREE.MathUtils.clamp(1 - distance / 32, 0.2, 0.72);
+          if (distance < 21 && elapsed > enemy.nextShot) {
+            enemy.nextShot = elapsed + 1.55 + Math.random() * 1.3;
+            const accuracy = THREE.MathUtils.clamp(0.58 - distance / 45, 0.12, 0.44);
             const hit = Math.random() < accuracy;
             const start = enemy.group.localToWorld(new THREE.Vector3(0.45, 1.2, -1));
             const end = hit
@@ -554,7 +554,7 @@ export const GameCanvas = ({
             addTracer(scene, start, end, 0xff5a30);
             playSound(78, 0.07, 0.018);
             if (hit) {
-              const rawDamage = 7 + Math.floor(Math.random() * 7);
+              const rawDamage = 4 + Math.floor(Math.random() * 5);
               const absorbed = Math.min(armor, Math.ceil(rawDamage * 0.45));
               armor -= absorbed;
               health -= rawDamage - absorbed;
