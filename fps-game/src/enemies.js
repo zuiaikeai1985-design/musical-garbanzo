@@ -252,7 +252,7 @@ export class EnemyManager {
         const targetYaw = Math.atan2(-toPlayer.x, -toPlayer.z);
         bot.yaw = this._lerpAngle(bot.yaw, targetYaw, Math.min(1, dt * 7));
 
-        const engageDist = lerp(9, 20, bot.skill);
+        const engageDist = lerp(6.5, 20, bot.skill);
         if (dist > engageDist) {
           // 距离较远：沿导航路径逼近（可绕过掩体，不会卡住）
           bot.repathTimer -= dt;
