@@ -9,14 +9,22 @@
     "@code-hike/lighter": "1.0.3",
     "@remotion/cli": "^4.0.0",
     "@remotion/google-fonts": "^4.0.0",
-    "@remotion/studio": "^4.0.0",
     "@remotion/layout-utils": "^4.0.0",
+    "@remotion/studio": "^4.0.0",
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/three": "^0.185.4",
+    "@vitejs/plugin-react": "^6.0.5",
+    "canvas-confetti": "^1.9.4",
     "codehike": "1.0.4",
+    "lucide-react": "^1.31.0",
+    "polished": "4.3.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "remotion": "^4.0.0",
+    "three": "^0.185.1",
     "twoslash-cdn": "0.3.1",
-    "polished": "4.3.1",
+    "vite": "^8.2.1",
+    "vitest": "^4.1.10",
     "zod": "3.22.3"
   },
   "devDependencies": {
@@ -27,10 +35,14 @@
     "prettier": "3.6.0",
     "typescript": "5.9.3"
   },
-  "scripts": {
-    "dev": "remotion studio",
-    "build": "remotion bundle",
-    "upgrade": "remotion upgrade",
+    "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "remotion:dev": "remotion studio",
+    "remotion:build": "remotion bundle",
+    "remotion:upgrade": "remotion upgrade",
     "lint": "tsc && eslint src"
   },
   "private": true
