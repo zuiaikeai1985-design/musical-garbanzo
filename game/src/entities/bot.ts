@@ -4,6 +4,7 @@ import type { DifficultyProfile, HitPart, HitResult } from "../core/types";
 import type { Effects } from "./effects";
 import type { AudioEngine } from "../core/audio";
 import { markerTexture } from "../world/textures";
+import type { NavGrid } from "../world/navgrid";
 
 export interface BotWorld {
   colliders: readonly THREE.Box3[];
@@ -22,6 +23,8 @@ export interface BotWorld {
   listener: THREE.Object3D;
   /** Draws a marker above bots that currently have eyes on the player. */
   showMarkers: boolean;
+  /** Flow field pointing toward the player, shared by every bot. */
+  navGrid: NavGrid;
   damagePlayer: (amount: number, from: THREE.Vector3, botName: string) => void;
 }
 
@@ -422,7 +425,9 @@ export class Bot {
           this.stateTimer = 0;
           this.pickCover(world);
         } else {
-          move.copy(this.steer(toTarget.normalize(), world));
+          // The flow field routes around walls; whiskers only handle the rest.
+          const routed = world.navGrid.direction(this.position);
+          move.copy(routed ? this.steer(routed, world) : this.steer(toTarget.normalize(), world));
         }
         break;
       }
@@ -443,7 +448,8 @@ export class Bot {
           this.strafeTimer = 0.6 + Math.random() * 1.1;
           this.strafeDir = Math.random() < 0.5 ? -1 : 1;
         }
-        const forward = toPlayer.clone().normalize();
+        const routed = distanceToPlayer > 12 ? world.navGrid.direction(this.position) : null;
+        const forward = routed ?? toPlayer.clone().normalize();
         const side = new THREE.Vector3(-forward.z, 0, forward.x).multiplyScalar(this.strafeDir);
         const desired = side.clone();
         // Close the gap when far, back off when uncomfortably close.

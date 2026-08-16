@@ -16,6 +16,7 @@ import { Hud } from "../ui/hud";
 import { Radar } from "../ui/radar";
 import { buildMap, type GameMap } from "../world/map";
 import { rayBoxes } from "../world/collision";
+import { NavGrid } from "../world/navgrid";
 
 type GameState = "menu" | "playing" | "paused" | "gameover";
 
@@ -66,6 +67,9 @@ export class Game {
   private currentWeapon: WeaponId = "rifle";
   private previousWeapon: WeaponId = "pistol";
   private switchTimer = 0;
+
+  private readonly navGrid: NavGrid;
+  private navTimer = 0;
 
   private readonly bots: Bot[] = [];
   private spawnQueue = 0;
@@ -120,6 +124,8 @@ export class Game {
     this.effects = new Effects(this.scene);
     this.player = new Player(this.map.playerSpawn, this.map.playerSpawnYaw);
     this.viewModel = new ViewModel(this.camera);
+    this.navGrid = new NavGrid(this.map.bounds, this.map.colliders);
+    this.navGrid.update(this.player.position);
     this.radar = new Radar(
       document.getElementById("radar") as HTMLCanvasElement,
       this.map.bounds,
@@ -795,6 +801,12 @@ export class Game {
     this.hud.setCrosshair(4 + spread * 4.5, 6 + spread * 1.2);
 
     // ---- bots ----
+    this.navTimer -= dt;
+    if (this.navTimer <= 0) {
+      this.navGrid.update(this.player.position);
+      this.navTimer = 0.3;
+    }
+
     const botWorld: BotWorld = {
       colliders: this.map.colliders,
       coverPoints: this.map.coverPoints,
@@ -809,6 +821,7 @@ export class Game {
       },
       listener: this.camera,
       showMarkers: this.settings.markers,
+      navGrid: this.navGrid,
       damagePlayer: this.damagePlayer,
     };
 
