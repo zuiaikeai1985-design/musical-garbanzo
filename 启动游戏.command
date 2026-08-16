@@ -26,9 +26,14 @@ if [ ! -d node_modules ]; then
   echo ""
   if ! npm install --no-audit --no-fund; then
     echo ""
-    echo " [X] 安装失败，请检查网络后重新双击本文件"
-    read -r -p " 按回车键退出 / press Enter to exit"
-    exit 1
+    echo " 默认下载点连不上，自动改用国内镜像重试... / retrying with the China mirror..."
+    echo ""
+    if ! npm install --no-audit --no-fund --registry=https://registry.npmmirror.com; then
+      echo ""
+      echo " [X] 安装失败，请检查网络后重新双击本文件"
+      read -r -p " 按回车键退出 / press Enter to exit"
+      exit 1
+    fi
   fi
 fi
 
@@ -40,5 +45,5 @@ echo "  Keep this window open while playing!"
 echo " ============================================"
 echo ""
 
-(sleep 4 && open "http://localhost:5173") &
+(sleep 6 && open "http://127.0.0.1:5173") &
 npm run dev

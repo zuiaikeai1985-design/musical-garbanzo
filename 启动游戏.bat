@@ -30,6 +30,12 @@ if not exist node_modules (
   call npm install --no-audit --no-fund
   if errorlevel 1 (
     echo.
+    echo  默认下载点连不上，自动改用国内镜像重试... / retrying with the China mirror...
+    echo.
+    call npm install --no-audit --no-fund --registry=https://registry.npmmirror.com
+  )
+  if errorlevel 1 (
+    echo.
     echo  [X] 安装失败，请检查网络后重新双击本文件 / install failed, check network and retry
     pause
     exit /b 1
@@ -47,6 +53,6 @@ echo   （不玩了直接关掉这个窗口就行）
 echo  ============================================
 echo.
 
-start "" cmd /c "timeout /t 4 >nul & start http://localhost:5173"
+start "" cmd /c "timeout /t 6 >nul & start http://127.0.0.1:5173"
 call npm run dev
 pause
