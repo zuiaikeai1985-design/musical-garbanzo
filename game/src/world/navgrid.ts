@@ -70,9 +70,43 @@ export class NavGrid {
     return this.originZ + (row + 0.5) * this.cell;
   }
 
+  /**
+   * Nearest open cell to the goal. The player often stands close enough to a
+   * wall to fall inside the padded blocked area, and seeding the search there
+   * would leave every bot without a route.
+   */
+  private seedIndex(goal: THREE.Vector3): number {
+    const col = this.col(goal.x);
+    const row = this.row(goal.z);
+    const index = row * this.cols + col;
+    if (!this.blocked[index]) return index;
+
+    for (let radius = 1; radius <= 4; radius++) {
+      let best = -1;
+      let bestDistance = Infinity;
+      for (let dc = -radius; dc <= radius; dc++) {
+        for (let dr = -radius; dr <= radius; dr++) {
+          if (Math.max(Math.abs(dc), Math.abs(dr)) !== radius) continue;
+          const nc = col + dc;
+          const nr = row + dr;
+          if (nc < 0 || nr < 0 || nc >= this.cols || nr >= this.rows) continue;
+          const candidate = nr * this.cols + nc;
+          if (this.blocked[candidate]) continue;
+          const distance = dc * dc + dr * dr;
+          if (distance < bestDistance) {
+            bestDistance = distance;
+            best = candidate;
+          }
+        }
+      }
+      if (best >= 0) return best;
+    }
+    return index;
+  }
+
   /** Rebuilds the distance field so every open cell knows the way to `goal`. */
   update(goal: THREE.Vector3): void {
-    const goalIndex = this.row(goal.z) * this.cols + this.col(goal.x);
+    const goalIndex = this.seedIndex(goal);
     this.goalIndex = goalIndex;
     this.distance.fill(UNREACHABLE);
 
