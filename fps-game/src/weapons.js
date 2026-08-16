@@ -302,6 +302,7 @@ export class WeaponSystem {
     this.aim = 0; // 0=腰射 1=瞄准
     this.aimToggle = false;
     this.aimAssist = 0; // 简单难度的辅助瞄准强度
+    this.aimAssistCone = 6 * DEG; // 吸附锥角
 
     this.flashTimer = 0;
     this.prevFireHeld = false;
@@ -558,7 +559,7 @@ export class WeaponSystem {
   /** 辅助瞄准：把弹道向锥形范围内最近的敌人小幅吸附（仅简单难度） */
   _applyAimAssist(origin, dir) {
     if (!this.aimAssist) return dir;
-    const cone = 6 * DEG;
+    const cone = this.aimAssistCone;
     let bestAngle = cone;
     let bestDir = null;
     for (const bot of this.enemies.bots) {

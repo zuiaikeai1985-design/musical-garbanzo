@@ -22,6 +22,7 @@ const DIFFICULTIES = {
     count: (r) => Math.min(2 + Math.ceil(r / 2), 6),
     dmgScale: 0.55,
     aimAssist: 0.85,
+    aimAssistCone: 8,
   },
   normal: {
     skill: (r) => clamp(0.28 + r * 0.06, 0, 0.9),
@@ -206,6 +207,7 @@ class Game {
     const skill = diff.skill(this.round);
     this.enemies.spawnWave(count, skill, diff.dmgScale);
     this.weapons.aimAssist = diff.aimAssist;
+    this.weapons.aimAssistCone = (diff.aimAssistCone || 6) * DEG;
 
     this.hud.setRound(this.round);
     this.hud.setScore(this.scoreCT, this.scoreT);
