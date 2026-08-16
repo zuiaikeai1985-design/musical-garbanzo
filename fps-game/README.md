@@ -10,6 +10,7 @@ npm install
 npm run dev        # 开发模式，默认 http://localhost:5173
 npm run build      # 生产构建，输出到 dist/
 npm run preview    # 预览生产构建
+npm test           # 逻辑测试：命中判定 + 敌人 AI 行为仿真 + 武器/辅助瞄准端到端仿真
 ```
 
 ## 玩法
@@ -58,6 +59,8 @@ npm run preview    # 预览生产构建
 
 - `src/world.js`：程序化生成的沙漠竞技场（Canvas 贴图）、AABB 碰撞体、导航点图（自动连边 + BFS 寻路）
 - `src/enemies.js`：敌人 AI 状态机（巡逻 / 追击 / 交战），视线与听觉感知，圆柱/球体命中判定（爆头 4 倍伤害）
-- `src/weapons.js`：7 种武器、散布/后座/开镜系统、程序化第一人称枪模
+- `src/weapons.js`：7 种武器、散布/后座/开镜系统、程序化第一人称枪模、简单难度辅助瞄准
 - `src/audio.js`：WebAudio 合成的枪声、脚步、命中反馈等全部音效（含简单空间定位）
 - `src/effects.js`：弹道、枪口火光、弹孔、血液粒子、抛壳
+- 低帧率友好：点击/按键会进入帧队列，软件渲染（无 GPU）环境自动降画质
+- `hittest.mjs` / `sim.mjs` / `sim2.mjs`：无头逻辑测试（`npm test`）
