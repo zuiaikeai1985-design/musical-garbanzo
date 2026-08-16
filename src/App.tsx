@@ -102,6 +102,13 @@ export default function App() {
     window.setTimeout(requestLock, 80);
   };
 
+  const returnToMenu = () => {
+    document.exitPointerLock?.();
+    setHud(initialHud);
+    setRoundId((value) => value + 1);
+    setPhase("menu");
+  };
+
   useEffect(() => {
     const onPointerLock = () => {
       if (!document.pointerLockElement && phase === "playing") {
@@ -294,7 +301,7 @@ export default function App() {
               <span>继续行动</span>
               <i>→</i>
             </button>
-            <button className="text-button" onClick={() => setPhase("menu")}>
+            <button className="text-button" onClick={returnToMenu}>
               返回任务简报
             </button>
           </div>
@@ -332,7 +339,7 @@ export default function App() {
               <span>再次行动</span>
               <i>↻</i>
             </button>
-            <button className="text-button" onClick={() => setPhase("menu")}>
+            <button className="text-button" onClick={returnToMenu}>
               返回任务简报
             </button>
           </div>
