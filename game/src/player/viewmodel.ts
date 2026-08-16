@@ -2,35 +2,43 @@ import * as THREE from "three";
 import type { WeaponId } from "./weapons";
 import { sparkTexture } from "../world/textures";
 
+// The view model gets a small emissive lift so it stays readable in shadow;
+// three.js lights are global, so a dedicated weapon light is not an option.
 const GUN_METAL = new THREE.MeshStandardMaterial({
-  color: 0x2b2f34,
+  color: 0x4a5057,
+  emissive: 0x15181b,
   roughness: 0.45,
-  metalness: 0.75,
+  metalness: 0.6,
 });
 const GUN_DARK = new THREE.MeshStandardMaterial({
-  color: 0x17191c,
+  color: 0x2e3237,
+  emissive: 0x101214,
   roughness: 0.6,
-  metalness: 0.5,
+  metalness: 0.4,
 });
 const WOOD = new THREE.MeshStandardMaterial({
-  color: 0x6c452a,
+  color: 0x8f5c34,
+  emissive: 0x1b1009,
   roughness: 0.8,
   metalness: 0.05,
 });
 const POLY = new THREE.MeshStandardMaterial({
-  color: 0x3f4a3a,
+  color: 0x54604d,
+  emissive: 0x12160f,
   roughness: 0.85,
   metalness: 0.1,
 });
 const GLOVE = new THREE.MeshStandardMaterial({
-  color: 0x30302f,
+  color: 0x484744,
+  emissive: 0x101010,
   roughness: 0.95,
   metalness: 0,
 });
 const STEEL = new THREE.MeshStandardMaterial({
-  color: 0xb9c0c6,
+  color: 0xc6cdd3,
+  emissive: 0x1a1d20,
   roughness: 0.28,
-  metalness: 0.9,
+  metalness: 0.85,
 });
 
 function box(
@@ -164,8 +172,10 @@ export interface ViewModelInput {
   mouseDY: number;
 }
 
-const HIP = new THREE.Vector3(0.17, -0.16, -0.36);
-const ADS = new THREE.Vector3(0, -0.075, -0.28);
+const HIP = new THREE.Vector3(0.14, -0.13, -0.3);
+const ADS = new THREE.Vector3(0, -0.062, -0.24);
+/** Keeps the weapon from swallowing the lower right of the screen. */
+const VIEW_MODEL_SCALE = 0.62;
 
 export class ViewModel {
   readonly root = new THREE.Group();
@@ -189,6 +199,7 @@ export class ViewModel {
     for (const id of ["rifle", "smg", "pistol", "sniper", "knife"] as WeaponId[]) {
       const { group, muzzle } = buildWeaponModel(id);
       group.visible = false;
+      group.scale.setScalar(VIEW_MODEL_SCALE);
       this.models.set(id, group);
       this.muzzles.set(id, muzzle);
       this.root.add(group);

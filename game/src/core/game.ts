@@ -13,6 +13,7 @@ import {
   type WeaponId,
 } from "../player/weapons";
 import { Hud } from "../ui/hud";
+import { Radar } from "../ui/radar";
 import { buildMap, type GameMap } from "../world/map";
 import { rayBoxes } from "../world/collision";
 
@@ -59,6 +60,7 @@ export class Game {
   private readonly map: GameMap;
   private readonly player: Player;
   private readonly viewModel: ViewModel;
+  private readonly radar: Radar;
 
   private readonly weapons = new Map<WeaponId, WeaponState>();
   private currentWeapon: WeaponId = "rifle";
@@ -118,6 +120,11 @@ export class Game {
     this.effects = new Effects(this.scene);
     this.player = new Player(this.map.playerSpawn, this.map.playerSpawnYaw);
     this.viewModel = new ViewModel(this.camera);
+    this.radar = new Radar(
+      document.getElementById("radar") as HTMLCanvasElement,
+      this.map.bounds,
+      this.map.colliders,
+    );
 
     for (const id of WEAPON_ORDER) this.weapons.set(id, new WeaponState(WEAPONS[id]));
 
@@ -354,12 +361,15 @@ export class Game {
 
   private spawnBot(): void {
     const profile = DIFFICULTIES[this.settings.difficulty];
-    const candidates = [...this.map.botSpawns].sort(
-      (a, b) =>
-        b.distanceToSquared(this.player.position) - a.distanceToSquared(this.player.position),
+    // Spawn out of sight but close enough that fights start quickly.
+    const far = this.map.botSpawns.filter(
+      (spawn) => spawn.distanceTo(this.player.position) > 16,
     );
-    // Prefer far spawns but keep some variety so pushes come from angles.
-    const pick = candidates[Math.floor(Math.random() * Math.min(5, candidates.length))];
+    const candidates = (far.length >= 3 ? far : this.map.botSpawns).sort(
+      (a, b) =>
+        a.distanceToSquared(this.player.position) - b.distanceToSquared(this.player.position),
+    );
+    const pick = candidates[Math.floor(Math.random() * Math.min(4, candidates.length))];
     const spawn = pick.clone().add(
       new THREE.Vector3((Math.random() - 0.5) * 2.2, 0, (Math.random() - 0.5) * 2.2),
     );
@@ -817,6 +827,12 @@ export class Game {
       this.respawnTimer -= dt;
       if (this.respawnTimer <= 0) this.finishGame();
     }
+
+    this.radar.update(
+      dt,
+      { position: this.player.position, yaw: this.player.yaw },
+      this.bots.map((bot) => ({ position: bot.position, spotted: bot.alive && bot.spotted })),
+    );
 
     this.effects.update(dt);
     this.hud.setHealth(this.player.health);

@@ -83,6 +83,8 @@ export class Bot {
   armor = 50;
   alive = true;
   removeMe = false;
+  /** True while this bot has line of sight on the player. */
+  spotted = false;
 
   private state: BotState = "idle";
   private stateTimer = 0;
@@ -152,8 +154,8 @@ export class Bot {
     this.marker = new THREE.Sprite(
       new THREE.SpriteMaterial({ map: markerTexture(), transparent: true, depthWrite: false }),
     );
-    this.marker.scale.set(0.34, 0.34, 0.34);
-    this.marker.position.set(0, 2.12, 0);
+    this.marker.scale.set(0.45, 0.45, 0.45);
+    this.marker.position.set(0, 2.16, 0);
     this.marker.visible = false;
     this.group.add(this.marker);
 
@@ -352,6 +354,7 @@ export class Bot {
   update(dt: number, world: BotWorld): void {
     if (!this.alive) {
       this.marker.visible = false;
+      this.spotted = false;
       this.deathTimer += dt;
       // Topple over, then sink into the ground and disappear.
       const fall = Math.min(1, this.deathTimer / 0.5);
@@ -365,6 +368,7 @@ export class Bot {
     }
 
     const visible = this.canSee(world);
+    this.spotted = visible;
     this.marker.visible = world.showMarkers && visible;
     if (visible) {
       this.lastKnownPlayer.copy(world.player.position);

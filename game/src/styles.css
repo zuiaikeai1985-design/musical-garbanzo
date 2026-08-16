@@ -258,6 +258,32 @@ body {
   color: #fff;
 }
 
+/* radar */
+#radar-wrap {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  border: 1px solid rgba(246, 196, 83, 0.28);
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgba(8, 10, 14, 0.55);
+}
+
+#radar {
+  display: block;
+  width: 168px;
+  height: 168px;
+}
+
+.radar-label {
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-align: center;
+  padding: 2px 0 3px;
+  opacity: 0.45;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 /* killfeed */
 #killfeed {
   position: absolute;
