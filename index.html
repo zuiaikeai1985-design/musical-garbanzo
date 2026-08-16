@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dust Outpost — 团队死斗</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Noto+Sans+SC:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game-canvas"></canvas>
+
+      <div id="hud" hidden>
+        <canvas id="radar" width="180" height="180"></canvas>
+
+        <div id="crosshair">
+          <span class="ch ch-n"></span>
+          <span class="ch ch-s"></span>
+          <span class="ch ch-e"></span>
+          <span class="ch ch-w"></span>
+          <span class="ch-dot"></span>
+        </div>
+        <div id="hitmarker"></div>
+        <div id="scope" hidden></div>
+        <div id="damage-vignette"></div>
+
+        <div id="killfeed"></div>
+
+        <div id="topbar">
+          <div class="score t-score"><span>T</span><b id="score-t">0</b></div>
+          <div class="clock" id="match-clock">10:00</div>
+          <div class="score ct-score"><b id="score-ct">0</b><span>CT</span></div>
+        </div>
+
+        <div id="bottom-left">
+          <div class="stat health">
+            <span class="icon">✚</span>
+            <b id="health-val">100</b>
+          </div>
+          <div class="stat armor">
+            <span class="icon">⬡</span>
+            <b id="armor-val">0</b>
+          </div>
+        </div>
+
+        <div id="bottom-right">
+          <div class="ammo">
+            <b id="ammo-clip">30</b>
+            <span id="ammo-reserve">/ 90</span>
+          </div>
+          <div id="weapon-name">AK-47</div>
+        </div>
+
+        <div id="money">$<span id="money-val">3500</span></div>
+        <div id="hint"></div>
+        <div id="pickup-toast"></div>
+      </div>
+
+      <div id="buy-menu" hidden>
+        <div class="buy-panel">
+          <header>
+            <h2>购买菜单</h2>
+            <p>按 B 关闭 · 数字键快速购买</p>
+          </header>
+          <div id="buy-list"></div>
+          <footer>余额 <b id="buy-money">$3500</b></footer>
+        </div>
+      </div>
+
+      <div id="scoreboard" hidden>
+        <div class="sb-panel">
+          <h2>计分板</h2>
+          <div class="sb-cols">
+            <div>
+              <h3 class="t-head">恐怖分子</h3>
+              <ul id="sb-t"></ul>
+            </div>
+            <div>
+              <h3 class="ct-head">反恐精英</h3>
+              <ul id="sb-ct"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="death-overlay" hidden>
+        <div class="death-card">
+          <p class="killed-by">你被击杀</p>
+          <h2 id="killer-name">BOT</h2>
+          <p id="respawn-text">3 秒后复活</p>
+        </div>
+      </div>
+
+      <div id="pause-menu" hidden>
+        <div class="menu-card">
+          <h2>已暂停</h2>
+          <label class="sens">
+            鼠标灵敏度
+            <input id="sens-slider" type="range" min="0.4" max="2.4" step="0.1" value="1" />
+            <span id="sens-val">1.0</span>
+          </label>
+          <button id="btn-resume" type="button">继续游戏</button>
+          <button id="btn-quit" type="button" class="ghost">返回主菜单</button>
+        </div>
+      </div>
+
+      <div id="main-menu">
+        <div class="menu-bg"></div>
+        <div class="menu-content">
+          <p class="eyebrow">团队死斗 · 5v5 人机</p>
+          <h1>DUST OUTPOST</h1>
+          <p class="tagline">沙城前哨 · 类 CS 第一人称射击</p>
+          <div class="team-pick">
+            <button id="join-t" type="button" class="team-btn t">
+              <span class="team-label">加入</span>
+              <strong>恐怖分子</strong>
+              <small>AK-47 · 沙城突击</small>
+            </button>
+            <button id="join-ct" type="button" class="team-btn ct">
+              <span class="team-label">加入</span>
+              <strong>反恐精英</strong>
+              <small>M4A4 · 守点反击</small>
+            </button>
+          </div>
+          <ul class="controls">
+            <li><kbd>WASD</kbd> 移动</li>
+            <li><kbd>鼠标</kbd> 瞄准 · 左键射击 · 右键开镜</li>
+            <li><kbd>空格</kbd> 跳 · <kbd>Ctrl</kbd> 蹲 · <kbd>Shift</kbd> 静步</li>
+            <li><kbd>R</kbd> 换弹 · <kbd>1 2 3</kbd> 切枪 · <kbd>B</kbd> 购买</li>
+            <li><kbd>Tab</kbd> 计分板 · <kbd>Esc</kbd> 暂停</li>
+          </ul>
+        </div>
+      </div>
+
+      <div id="round-banner" hidden></div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

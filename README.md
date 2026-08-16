@@ -1,63 +1,43 @@
-# Remotion video
+# Dust Outpost
 
-<p align="center">
-  <a href="https://github.com/remotion-dev/logo">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://github.com/remotion-dev/logo/raw/main/animated-logo-banner-dark.apng">
-      <img alt="Animated Remotion Logo" src="https://github.com/remotion-dev/logo/raw/main/animated-logo-banner-light.gif">
-    </picture>
-  </a>
-</p>
+浏览器里就能玩的 CS 风格第一人称射击：沙城前哨地图、5v5 人机团队死斗、购买菜单、后坐力与爆头。
 
-Welcome to your Remotion project!
+## 运行
 
-## Commands
-
-**Install Dependencies**
-
-```console
-npm i
-```
-
-**Start Preview**
-
-```console
+```bash
+npm install
 npm run dev
 ```
 
-**Change code snippets**
+打开终端里提示的本地地址（默认 `http://localhost:5173`），点选阵营后单击画面锁定鼠标。
 
-The snippets are located in the `public` folder.  
-Change the code or create new files in there.
-
-**Render video**
-
-```console
-npx remotion render
+```bash
+npm test      # 伤害 / 碰撞 / 武器 / 寻路单测
+npm run build # 类型检查 + 生产构建
 ```
 
-**Upgrade Remotion**
+## 操作
 
-```console
-npx remotion upgrade
-```
+| 按键 | 作用 |
+| --- | --- |
+| WASD | 移动 |
+| 鼠标 | 瞄准 |
+| 左键 / 右键 | 射击 / AWP 开镜 |
+| 空格 / Ctrl / Shift | 跳 / 蹲 / 静步 |
+| R | 换弹 |
+| 1 2 3 | 步枪 / 手枪 / 刀 |
+| B | 购买菜单 |
+| Tab | 计分板 |
+| Esc | 暂停 |
 
-## More examples
+## 玩法
 
-Visit the [Code Hike examples](https://github.com/code-hike/examples/tree/main/with-remotion) for more variants of code animations.
+- 先到 **20 击杀** 的一方获胜，或 10 分钟后按总分结算
+- 开局 $3500，击杀 +$300，每 45 秒发一次生存津贴
+- 购买：AK-47、M4A4、AWP、Desert Eagle、USP-S、Glock-18、护甲+头盔
+- 爆头、护甲穿透、移动/跳跃散布、蹲下更准
+- 雷达显示队友、敌人、A/B 包点
 
-## Docs
+## 技术
 
-Get started with Remotion by reading the [fundamentals page](https://www.remotion.dev/docs/the-fundamentals).
-
-## Help
-
-We provide help on our [Discord server](https://discord.gg/6VzzNDwUwV).
-
-## Issues
-
-Found an issue with Remotion? [File an issue here](https://github.com/remotion-dev/remotion/issues/new).
-
-## License
-
-Note that for some entities a company license is needed. [Read the terms here](https://github.com/remotion-dev/remotion/blob/main/LICENSE.md).
+Vite + TypeScript + Three.js。地图、人机、枪声和准星 HUD 都在浏览器里即时生成，不依赖额外素材包。
