@@ -21,7 +21,7 @@ const DIFFICULTIES = {
     skill: (r) => clamp(0.08 + r * 0.04, 0, 0.5),
     count: (r) => Math.min(2 + Math.ceil(r / 2), 6),
     dmgScale: 0.55,
-    aimAssist: 0.75,
+    aimAssist: 0.85,
   },
   normal: {
     skill: (r) => clamp(0.28 + r * 0.06, 0, 0.9),

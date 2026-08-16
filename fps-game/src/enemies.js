@@ -243,7 +243,8 @@ export class EnemyManager {
         const fwd = toPlayer.clone().setY(0).normalize();
         const side = new THREE.Vector3(-fwd.z, 0, fwd.x).multiplyScalar(bot.strafeDir);
         moveDir = side.clone();
-        if (dist > 26) moveDir.addScaledVector(fwd, 1.4);
+        // 低技术敌人会大胆逼近，高技术敌人保持交战距离
+        if (dist > lerp(11, 26, bot.skill)) moveDir.addScaledVector(fwd, 1.4);
         else if (dist < 6) moveDir.addScaledVector(fwd, -0.9);
         moveDir.normalize();
         moveSpeed = lerp(0.6, 2.8, bot.skill);

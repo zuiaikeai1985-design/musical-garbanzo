@@ -558,7 +558,7 @@ export class WeaponSystem {
   /** 辅助瞄准：把弹道向锥形范围内最近的敌人小幅吸附（仅简单难度） */
   _applyAimAssist(origin, dir) {
     if (!this.aimAssist) return dir;
-    const cone = 4 * DEG;
+    const cone = 6 * DEG;
     let bestAngle = cone;
     let bestDir = null;
     for (const bot of this.enemies.bots) {
