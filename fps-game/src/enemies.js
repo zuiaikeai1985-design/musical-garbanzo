@@ -9,9 +9,9 @@ const BODY_R = 0.38;
 const EYE_Y = 1.55;
 
 const PALETTES = [
-  { shirt: "#8a6f4a", vest: "#42392a", pants: "#3c3c34", head: "#2b2620" },
-  { shirt: "#6b6f4d", vest: "#3a3d2c", pants: "#2f3230", head: "#232323" },
-  { shirt: "#7d5a44", vest: "#463227", pants: "#38342e", head: "#2e2620" },
+  { shirt: "#c08b52", vest: "#6e4c2c", pants: "#5f5748", head: "#a03325" },
+  { shirt: "#a8ae74", vest: "#5c683e", pants: "#525244", head: "#8f2c20" },
+  { shirt: "#bd7450", vest: "#644434", pants: "#585042", head: "#962e1f" },
 ];
 
 /** 敌人所用武器的属性（伤害/射速/精度） */
@@ -22,9 +22,15 @@ const BOT_GUNS = {
 };
 
 function part(w, h, d, color, x, y, z) {
+  // 轻微自发光：让敌人在强逆光/软件渲染下也保持可读性
   const m = new THREE.Mesh(
     new THREE.BoxGeometry(w, h, d),
-    new THREE.MeshStandardMaterial({ color, roughness: 0.85 }),
+    new THREE.MeshStandardMaterial({
+      color,
+      roughness: 0.85,
+      emissive: color,
+      emissiveIntensity: 0.25,
+    }),
   );
   m.position.set(x, y, z);
   m.castShadow = true;
@@ -45,7 +51,7 @@ function buildBotModel(palette) {
   const vest = part(0.54, 0.4, 0.32, palette.vest, 0, 1.14, 0);
 
   const head = part(0.26, 0.26, 0.26, palette.head, 0, HEAD_Y, 0);
-  const face = part(0.2, 0.08, 0.02, "#c69066", 0, HEAD_Y + 0.02, -0.14);
+  const face = part(0.2, 0.1, 0.02, "#d8a878", 0, HEAD_Y + 0.01, -0.14);
 
   const armL = new THREE.Group();
   armL.position.set(-0.32, 1.36, 0);
