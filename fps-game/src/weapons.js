@@ -564,12 +564,14 @@ export class WeaponSystem {
     for (const bot of this.enemies.bots) {
       if (bot.state === "dead") continue;
       for (const h of [1.1, 1.58]) {
-        const target = new THREE.Vector3(bot.pos.x, bot.pos.y + h, bot.pos.z).sub(origin);
+        const point = new THREE.Vector3(bot.pos.x, bot.pos.y + h, bot.pos.z);
+        const target = point.clone().sub(origin);
         const dist = target.length();
         if (dist < 1.5 || dist > 60) continue;
         target.normalize();
         const angle = dir.angleTo(target);
-        if (angle < bestAngle) {
+        // 只吸附有视线的部位（不会把子弹吸到掩体上）
+        if (angle < bestAngle && this.world.hasLineOfSight(origin, point)) {
           bestAngle = angle;
           bestDir = target;
         }

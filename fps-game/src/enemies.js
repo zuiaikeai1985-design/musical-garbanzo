@@ -240,20 +240,31 @@ export class EnemyManager {
         const targetYaw = Math.atan2(-toPlayer.x, -toPlayer.z);
         bot.yaw = this._lerpAngle(bot.yaw, targetYaw, Math.min(1, dt * 7));
 
-        // 横移 + 距离控制（技术越高越会走位）
-        bot.strafeTimer -= dt;
-        if (bot.strafeTimer <= 0) {
-          bot.strafeDir *= -1;
-          bot.strafeTimer = randRange(0.7, 1.9);
+        const engageDist = lerp(9, 20, bot.skill);
+        if (dist > engageDist) {
+          // 距离较远：沿导航路径逼近（可绕过掩体，不会卡住）
+          bot.repathTimer -= dt;
+          if (bot.repathTimer <= 0 || !bot.path.length || bot.pathIdx >= bot.path.length) {
+            this._pathTo(bot, player.pos);
+            bot.repathTimer = 1.5;
+          }
+          const res = this._followPath(bot, lerp(2.4, 3.4, bot.skill));
+          moveDir = res.dir;
+          moveSpeed = moveDir ? lerp(2.4, 3.4, bot.skill) : 0;
+        } else {
+          // 近距离：横移走位（技术越高越会走位）
+          bot.strafeTimer -= dt;
+          if (bot.strafeTimer <= 0) {
+            bot.strafeDir *= -1;
+            bot.strafeTimer = randRange(0.7, 1.9);
+          }
+          const fwd = toPlayer.clone().setY(0).normalize();
+          const side = new THREE.Vector3(-fwd.z, 0, fwd.x).multiplyScalar(bot.strafeDir);
+          moveDir = side.clone();
+          if (dist < 4.5) moveDir.addScaledVector(fwd, -0.9);
+          moveDir.normalize();
+          moveSpeed = lerp(0.6, 2.8, bot.skill);
         }
-        const fwd = toPlayer.clone().setY(0).normalize();
-        const side = new THREE.Vector3(-fwd.z, 0, fwd.x).multiplyScalar(bot.strafeDir);
-        moveDir = side.clone();
-        // 低技术敌人会大胆逼近，高技术敌人保持交战距离
-        if (dist > lerp(11, 26, bot.skill)) moveDir.addScaledVector(fwd, 1.4);
-        else if (dist < 6) moveDir.addScaledVector(fwd, -0.9);
-        moveDir.normalize();
-        moveSpeed = lerp(0.6, 2.8, bot.skill);
         // 低技术敌人开火瞬间会站定
         if (bot.skill < 0.5 && sees && bot.reactTimer <= 0 && bot.burstLeft > 0) moveSpeed = 0;
 
