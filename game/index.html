@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OPERATION: DUST — FPS</title>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="scene"></canvas>
+
+      <!-- ============ HUD ============ -->
+      <div id="hud" class="hidden">
+        <div id="damage-flash"></div>
+        <div id="hit-direction-layer"></div>
+
+        <div id="crosshair">
+          <div class="ch ch-top"></div>
+          <div class="ch ch-bottom"></div>
+          <div class="ch ch-left"></div>
+          <div class="ch ch-right"></div>
+          <div class="ch ch-dot"></div>
+        </div>
+        <div id="hitmarker">
+          <span></span><span></span><span></span><span></span>
+        </div>
+
+        <div id="scope" class="hidden">
+          <div class="scope-line scope-h"></div>
+          <div class="scope-line scope-v"></div>
+          <div class="scope-ring"></div>
+        </div>
+
+        <div id="top-bar">
+          <div class="top-cell">
+            <div class="label">回合 ROUND</div>
+            <div class="value" id="round-value">1</div>
+          </div>
+          <div class="top-cell timer">
+            <div class="label">敌人 ENEMIES</div>
+            <div class="value" id="enemies-value">0</div>
+          </div>
+          <div class="top-cell">
+            <div class="label">击杀 KILLS</div>
+            <div class="value" id="kills-value">0</div>
+          </div>
+        </div>
+
+        <div id="killfeed"></div>
+
+        <div id="bottom-left">
+          <div class="stat health">
+            <span class="icon">&#10011;</span>
+            <span class="num" id="health-value">100</span>
+          </div>
+          <div class="stat armor">
+            <span class="icon">&#9733;</span>
+            <span class="num" id="armor-value">100</span>
+          </div>
+        </div>
+
+        <div id="bottom-right">
+          <div class="weapon-name" id="weapon-name">AR-47</div>
+          <div class="ammo">
+            <span class="mag" id="ammo-mag">30</span>
+            <span class="sep">/</span>
+            <span class="reserve" id="ammo-reserve">90</span>
+          </div>
+          <div class="reload-hint hidden" id="reload-hint">按 R 换弹</div>
+        </div>
+
+        <div id="weapon-list"></div>
+
+        <div id="center-banner"></div>
+        <div id="money-popup"></div>
+      </div>
+
+      <!-- ============ SCOREBOARD ============ -->
+      <div id="scoreboard" class="hidden">
+        <h2>计分板 / SCOREBOARD</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>玩家</th>
+              <th>击杀</th>
+              <th>爆头</th>
+              <th>命中率</th>
+              <th>伤害</th>
+            </tr>
+          </thead>
+          <tbody id="scoreboard-body"></tbody>
+        </table>
+        <p class="hint">按住 TAB 查看</p>
+      </div>
+
+      <!-- ============ MAIN MENU ============ -->
+      <div id="menu" class="overlay">
+        <div class="menu-panel">
+          <h1>OPERATION<span>: DUST</span></h1>
+          <p class="tagline">一个类 CS 的浏览器 FPS · Three.js 打造</p>
+
+          <div class="menu-row">
+            <label for="difficulty">难度 Difficulty</label>
+            <select id="difficulty">
+              <option value="easy">简单 — 新兵</option>
+              <option value="normal" selected>普通 — 士兵</option>
+              <option value="hard">困难 — 特种兵</option>
+            </select>
+          </div>
+          <div class="menu-row">
+            <label for="sensitivity">鼠标灵敏度 <b id="sensitivity-value">2.0</b></label>
+            <input id="sensitivity" type="range" min="0.4" max="6" step="0.1" value="2" />
+          </div>
+          <div class="menu-row">
+            <label for="fov">视野 FOV <b id="fov-value">90</b></label>
+            <input id="fov" type="range" min="70" max="110" step="1" value="90" />
+          </div>
+
+          <button id="play-button" class="primary">开始游戏 (点击锁定鼠标)</button>
+
+          <div class="controls">
+            <h3>操作说明</h3>
+            <ul>
+              <li><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 移动</li>
+              <li><kbd>Space</kbd> 跳跃 · <kbd>Ctrl</kbd> 蹲下 · <kbd>Shift</kbd> 静步</li>
+              <li><kbd>左键</kbd> 开火 · <kbd>右键</kbd> 开镜 · <kbd>R</kbd> 换弹</li>
+              <li><kbd>1</kbd> 步枪 · <kbd>2</kbd> 手枪 · <kbd>3</kbd> 狙击 · <kbd>4</kbd> 匕首 · <kbd>Q</kbd> 切换上一把</li>
+              <li><kbd>Tab</kbd> 计分板 · <kbd>Esc</kbd> 暂停</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ PAUSE ============ -->
+      <div id="pause" class="overlay hidden">
+        <div class="menu-panel small">
+          <h2>已暂停</h2>
+          <p class="tagline">点击继续以重新锁定鼠标</p>
+          <div class="menu-row">
+            <label for="sensitivity-pause">鼠标灵敏度 <b id="sensitivity-pause-value">2.0</b></label>
+            <input id="sensitivity-pause" type="range" min="0.4" max="6" step="0.1" value="2" />
+          </div>
+          <button id="resume-button" class="primary">继续游戏</button>
+          <button id="quit-button" class="ghost">返回主菜单</button>
+        </div>
+      </div>
+
+      <!-- ============ GAME OVER ============ -->
+      <div id="gameover" class="overlay hidden">
+        <div class="menu-panel small">
+          <h2 id="gameover-title">任务失败</h2>
+          <div class="result-grid" id="result-grid"></div>
+          <button id="retry-button" class="primary">再来一局</button>
+          <button id="menu-button" class="ghost">返回主菜单</button>
+        </div>
+      </div>
+
+      <div id="loading" class="overlay">
+        <div class="loader">正在部署战场…</div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
