@@ -4,7 +4,8 @@ import { clamp, lerp, randRange, randInt, DEG, moveWithCollisions, raySphere } f
 const BOT_RADIUS = 0.32;
 const BOT_HEIGHT = 1.72;
 const HEAD_Y = 1.58;
-const HEAD_R = 0.17;
+const HEAD_R = 0.2;
+const BODY_R = 0.38;
 const EYE_Y = 1.55;
 
 const PALETTES = [
@@ -244,7 +245,7 @@ export class EnemyManager {
         if (dist > 26) moveDir.addScaledVector(fwd, 1.4);
         else if (dist < 6) moveDir.addScaledVector(fwd, -0.9);
         moveDir.normalize();
-        moveSpeed = lerp(0.9, 2.8, bot.skill);
+        moveSpeed = lerp(0.6, 2.8, bot.skill);
         // 低技术敌人开火瞬间会站定
         if (bot.skill < 0.5 && sees && bot.reactTimer <= 0 && bot.burstLeft > 0) moveSpeed = 0;
 
@@ -438,7 +439,7 @@ export class EnemyManager {
         best = { bot, dist: tHead, point: origin.clone().addScaledVector(dir, tHead), isHead: true };
       }
       // 躯干圆柱
-      const tBody = this._rayVsCylinder(origin, dir, bot.pos, 0.3, 0.05, 1.45, maxDist);
+      const tBody = this._rayVsCylinder(origin, dir, bot.pos, BODY_R, 0.02, 1.48, maxDist);
       if (tBody !== null && (!best || tBody < best.dist)) {
         best = { bot, dist: tBody, point: origin.clone().addScaledVector(dir, tBody), isHead: false };
       }

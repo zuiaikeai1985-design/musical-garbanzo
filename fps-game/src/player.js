@@ -12,8 +12,8 @@ const RUN_SPEED = 6.4;
 const WALK_SPEED = 3.0;
 const CROUCH_SPEED = 2.6;
 const MOUSE_SENS = 0.0021;
-const ARROW_LOOK_SPEED = 2.6;
-const ARROW_TAP_NUDGE = 0.045; // 轻点方向键的即时转角（低帧率兜底）
+const ARROW_LOOK_SPEED = 2.2;
+const ARROW_TAP_NUDGE = 0.028; // 轻点方向键的即时转角（低帧率兜底）
 
 export class Player {
   constructor(camera, world, audio) {

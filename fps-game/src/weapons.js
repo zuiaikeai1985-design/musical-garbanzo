@@ -476,16 +476,25 @@ export class WeaponSystem {
       this.tryReload();
     }
 
+    // 后座恢复与散布收敛（先同步相机，使子弹方向与屏幕准星一致）
+    this.recoilPitch = lerp(this.recoilPitch, 0, Math.min(1, dt * 9));
+    this.recoilYaw = lerp(this.recoilYaw, 0, Math.min(1, dt * 9));
+    this.bloom = Math.max(0, this.bloom - dt * 3 * DEG);
+    this.kickZ = lerp(this.kickZ, 0, Math.min(1, dt * 10));
+    this.player.syncCamera(this.recoilPitch, this.recoilYaw);
+
     // 开火（clicks/wasPressed 兜底：低帧率下按下+抬起可能发生在同一帧内）
     const fireHeld = input.mouseDown || input.isDown("Enter");
     const fireTapped = input.clicks > 0 || input.wasPressed("Enter");
     const firePressed = (fireHeld && !this.prevFireHeld) || fireTapped;
     this.prevFireHeld = fireHeld;
+    let fired = false;
     if (canFire && this.switchTimer <= 0 && this.reloadTimer <= 0 && this.fireTimer <= 0) {
       const shouldFire = def.auto ? fireHeld || fireTapped : firePressed;
       if (shouldFire || (def.type === "melee" && firePressed)) {
         if (def.type === "melee") {
           this._swingKnife();
+          fired = true;
         } else {
           const a = this.ammo[this.current];
           if (a.mag <= 0) {
@@ -495,18 +504,14 @@ export class WeaponSystem {
             }
           } else {
             this._fire();
+            fired = true;
           }
         }
       }
     }
+    // 开火产生的新后座立即体现到本帧画面
+    if (fired) this.player.syncCamera(this.recoilPitch, this.recoilYaw);
 
-    // 后座恢复与散布收敛
-    this.recoilPitch = lerp(this.recoilPitch, 0, Math.min(1, dt * 9));
-    this.recoilYaw = lerp(this.recoilYaw, 0, Math.min(1, dt * 9));
-    this.bloom = Math.max(0, this.bloom - dt * 3 * DEG);
-    this.kickZ = lerp(this.kickZ, 0, Math.min(1, dt * 10));
-
-    this.player.syncCamera(this.recoilPitch, this.recoilYaw);
     this._animateViewModel(dt, input);
 
     if (this.flashTimer > 0) {
@@ -529,8 +534,9 @@ export class WeaponSystem {
     this.aimToggle = false;
   }
 
+  /** 以相机实际朝向（含后座偏移）为基准的弹道方向 */
   _spreadDir() {
-    const dir = this.player.aimDir();
+    const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion);
     const spread = this.getSpread();
     if (spread <= 0) return dir;
     const up = Math.abs(dir.y) > 0.98 ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0);
@@ -618,7 +624,7 @@ export class WeaponSystem {
     this.audio.knifeSwing();
     this.kickZ -= 0.1;
     const origin = this.player.eyePos;
-    const dir = this.player.aimDir();
+    const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion);
     const botHit = this.enemies.raycast(origin, dir, def.range);
     if (botHit) {
       this.effects.impact(botHit.point, null, "flesh");
