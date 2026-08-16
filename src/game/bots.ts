@@ -216,28 +216,53 @@ function hasLineOfSight(from: { x: number; y: number; z: number }, to: { x: numb
 
 function createSoldier(team: Team): THREE.Group {
   const g = new THREE.Group();
-  const shirt = new THREE.MeshLambertMaterial({ color: team === "T" ? 0xb8862c : 0x3d5c88 });
-  const pants = new THREE.MeshLambertMaterial({ color: team === "T" ? 0x5a4328 : 0x2c3340 });
-  const skin = new THREE.MeshLambertMaterial({ color: 0xc9a07a });
-  const dark = new THREE.MeshLambertMaterial({ color: 0x22262b });
+  const shirt = new THREE.MeshStandardMaterial({
+    color: team === "T" ? 0xb8862c : 0x3d5c88,
+    roughness: 0.72,
+    metalness: 0.08,
+  });
+  const vest = new THREE.MeshStandardMaterial({
+    color: team === "T" ? 0x6b5428 : 0x243044,
+    roughness: 0.62,
+    metalness: 0.18,
+  });
+  const pants = new THREE.MeshStandardMaterial({
+    color: team === "T" ? 0x5a4328 : 0x2c3340,
+    roughness: 0.8,
+  });
+  const skin = new THREE.MeshStandardMaterial({ color: 0xc9a07a, roughness: 0.55 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x1c2026, roughness: 0.4, metalness: 0.45 });
+  const steel = new THREE.MeshStandardMaterial({ color: 0x6a7076, roughness: 0.3, metalness: 0.8 });
 
-  const legs = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.72, 0.26), pants);
-  legs.position.y = 0.36;
-  const body = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.7, 0.28), shirt);
-  body.position.y = 1.05;
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 8), skin);
-  head.position.y = 1.58;
-  const helm = new THREE.Mesh(new THREE.SphereGeometry(0.175, 10, 8), dark);
-  helm.scale.y = 0.55;
-  helm.position.y = 1.66;
-  const lArm = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.55, 0.12), shirt);
-  lArm.position.set(-0.3, 1.0, 0.08);
-  lArm.rotation.x = -0.6;
+  const lLeg = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.7, 0.2), pants);
+  lLeg.position.set(-0.1, 0.35, 0);
+  const rLeg = lLeg.clone();
+  rLeg.position.x = 0.1;
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.48, 0.24), shirt);
+  body.position.y = 1.02;
+  const plate = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.36, 0.1), vest);
+  plate.position.set(0, 1.04, 0.1);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.15, 12, 10), skin);
+  head.position.y = 1.56;
+  const helm = new THREE.Mesh(new THREE.SphereGeometry(0.17, 12, 10), dark);
+  helm.scale.set(1, 0.58, 1.05);
+  helm.position.y = 1.64;
+  const visor = new THREE.Mesh(
+    new THREE.BoxGeometry(0.18, 0.04, 0.08),
+    new THREE.MeshStandardMaterial({ color: 0x111318, metalness: 0.7, roughness: 0.2 }),
+  );
+  visor.position.set(0, 1.58, 0.12);
+  const lArm = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.5, 0.11), shirt);
+  lArm.position.set(-0.28, 1.0, 0.1);
+  lArm.rotation.x = -0.7;
   const rArm = lArm.clone();
-  rArm.position.x = 0.3;
-  const gun = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.08, 0.42), dark);
-  gun.position.set(0.18, 1.05, -0.28);
-  g.add(legs, body, head, helm, lArm, rArm, gun);
+  rArm.position.x = 0.28;
+  const gun = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.06, 0.38), dark);
+  gun.position.set(0.16, 1.02, -0.26);
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.16, 8), steel);
+  barrel.rotation.x = Math.PI / 2;
+  barrel.position.set(0.16, 1.04, -0.5);
+  g.add(lLeg, rLeg, body, plate, head, helm, visor, lArm, rArm, gun, barrel);
   g.traverse((o) => {
     if (o instanceof THREE.Mesh) {
       o.castShadow = true;

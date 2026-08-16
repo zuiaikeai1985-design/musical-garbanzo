@@ -492,9 +492,8 @@ body,
   display: grid;
   place-items: center;
   background:
-    radial-gradient(circle at 20% 20%, rgba(212, 160, 23, 0.12), transparent 28%),
-    radial-gradient(circle at 80% 70%, rgba(91, 141, 239, 0.12), transparent 30%),
-    #0c1014;
+    radial-gradient(circle at 20% 10%, rgba(12, 16, 20, 0.28), transparent 36%),
+    linear-gradient(180deg, rgba(8, 10, 12, 0.42) 0%, rgba(8, 10, 12, 0.62) 100%);
 }
 
 .menu-content {
@@ -515,6 +514,7 @@ body,
   line-height: 0.9;
   letter-spacing: 0.06em;
   margin: 10px 0 8px;
+  text-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
 }
 
 .tagline {

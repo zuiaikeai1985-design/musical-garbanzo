@@ -2,6 +2,14 @@ import * as THREE from "three";
 import { aabbFromCenter } from "./math";
 import type { AABB, Team, Vec3 } from "./types";
 import type { Waypoint } from "./path";
+import {
+  createSky,
+  mat,
+  metalMaps,
+  sandMaps,
+  sandstoneMaps,
+  woodMaps,
+} from "./look";
 
 export type { Waypoint } from "./path";
 export { findPath, nearestWaypoint } from "./path";
@@ -15,53 +23,28 @@ export interface WorldData {
   radarWalls: Array<{ x: number; z: number; w: number; d: number }>;
 }
 
-const SAND = 0xb8965c;
-const WALL = 0x9a7d52;
-const WALL_DARK = 0x5c4630;
-const WOOD = 0x6b4423;
-const WOOD_LIGHT = 0x8a5a32;
-const CONCRETE = 0x6e675c;
-const METAL = 0x4a4d50;
-const TRIM = 0x3d3328;
-
-function noiseTexture(c1: string, c2: string, size = 128): THREE.CanvasTexture {
-  const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("2d context");
-  ctx.fillStyle = c1;
-  ctx.fillRect(0, 0, size, size);
-  for (let i = 0; i < size * 18; i++) {
-    ctx.fillStyle = c2;
-    ctx.globalAlpha = 0.08 + Math.random() * 0.18;
-    ctx.fillRect(Math.random() * size, Math.random() * size, 2 + Math.random() * 6, 2 + Math.random() * 6);
-  }
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.colorSpace = THREE.SRGBColorSpace;
-  return tex;
-}
-
 export function buildWorld(scene: THREE.Scene): WorldData {
   const colliders: AABB[] = [];
   const radarWalls: Array<{ x: number; z: number; w: number; d: number }> = [];
-  const sandTex = noiseTexture("#c2a36b", "#6a4e2a");
-  sandTex.repeat.set(18, 18);
-  const wallTex = noiseTexture("#a88858", "#3d2c18");
-  wallTex.repeat.set(2, 1);
-  const woodTex = noiseTexture("#7a4e28", "#2c160c");
 
-  const floorMat = new THREE.MeshLambertMaterial({ map: sandTex, color: SAND });
-  const wallMat = new THREE.MeshLambertMaterial({ map: wallTex, color: WALL });
-  const darkWall = new THREE.MeshLambertMaterial({ color: WALL_DARK });
-  const woodMat = new THREE.MeshLambertMaterial({ map: woodTex, color: WOOD });
-  const crateMat = new THREE.MeshLambertMaterial({ map: woodTex, color: WOOD_LIGHT });
-  const concrete = new THREE.MeshLambertMaterial({ color: CONCRETE });
-  const metal = new THREE.MeshLambertMaterial({ color: METAL });
-  const trimMat = new THREE.MeshLambertMaterial({ color: TRIM });
+  const sand = sandMaps();
+  const stone = sandstoneMaps();
+  const wood = woodMaps();
+  const metalTex = metalMaps();
 
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(120, 100), floorMat);
+  const floorMat = mat(0xffffff, { map: sand.map, bump: sand.bump, rough: 0.92, metal: 0.02, bumpScale: 0.28 });
+  const wallMat = mat(0xffffff, { map: stone.map, bump: stone.bump, rough: 0.78, metal: 0.04, bumpScale: 0.22 });
+  const darkWall = mat(0x6a5336, { map: stone.map, bump: stone.bump, rough: 0.82, metal: 0.03, bumpScale: 0.18 });
+  const woodMat = mat(0xffffff, { map: wood.map, bump: wood.bump, rough: 0.7, metal: 0.04, bumpScale: 0.16 });
+  const crateMat = mat(0xf0d2a8, { map: wood.map, bump: wood.bump, rough: 0.68, metal: 0.05, bumpScale: 0.14 });
+  const concrete = mat(0x7a7468, { rough: 0.88, metal: 0.06 });
+  const metal = mat(0xffffff, { map: metalTex.map, bump: metalTex.bump, metal: 0.72, rough: 0.38, bumpScale: 0.08 });
+  const trimMat = mat(0x3d3328, { rough: 0.7, metal: 0.08 });
+  const capMat = mat(0x4a3a28, { map: stone.map, rough: 0.75, metal: 0.05 });
+
+  scene.add(createSky());
+
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(140, 120, 8, 8), floorMat);
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;
   scene.add(floor);
@@ -72,11 +55,11 @@ export function buildWorld(scene: THREE.Scene): WorldData {
     w: number,
     d: number,
     h: number,
-    mat: THREE.Material,
+    material: THREE.Material,
     y = h / 2,
     collide = true,
   ): THREE.Mesh => {
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material);
     mesh.position.set(x, y, z);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
@@ -88,114 +71,190 @@ export function buildWorld(scene: THREE.Scene): WorldData {
     return mesh;
   };
 
+  const addWall = (x: number, z: number, w: number, d: number, h: number, material: THREE.Material): void => {
+    addBox(x, z, w, d, h, material);
+    addBox(x, z, w + 0.12, d + 0.12, 0.16, capMat, h + 0.02, false);
+  };
+
+  const addCrate = (x: number, z: number, w: number, d: number, h: number): void => {
+    addBox(x, z, w, d, h, crateMat);
+    addBox(x, z, w + 0.04, 0.06, 0.06, metal, h - 0.08, false);
+    addBox(x, z, 0.06, d + 0.04, 0.06, metal, h - 0.08, false);
+    addBox(x, z, w + 0.02, 0.05, 0.05, metal, 0.08, false);
+  };
+
+  const addBarrel = (x: number, z: number): void => {
+    const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.34, 0.95, 14), metal);
+    barrel.position.set(x, 0.48, z);
+    barrel.castShadow = true;
+    barrel.receiveShadow = true;
+    scene.add(barrel);
+    colliders.push(aabbFromCenter(x, 0.48, z, 0.68, 0.95, 0.68));
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.03, 8, 16), trimMat);
+    rim.rotation.x = Math.PI / 2;
+    rim.position.set(x, 0.92, z);
+    scene.add(rim);
+  };
+
+  const addPalm = (x: number, z: number): void => {
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, 3.4, 8), woodMat);
+    trunk.position.set(x, 1.7, z);
+    trunk.castShadow = true;
+    scene.add(trunk);
+    for (let i = 0; i < 7; i++) {
+      const leaf = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.04, 1.6), mat(0x3d6a32, { rough: 0.8 }));
+      const a = (i / 7) * Math.PI * 2;
+      leaf.position.set(x + Math.cos(a) * 0.55, 3.45, z + Math.sin(a) * 0.55);
+      leaf.rotation.set(0.45, -a, 0.15);
+      leaf.castShadow = true;
+      scene.add(leaf);
+    }
+  };
+
+  const addLetter = (ch: "A" | "B", x: number, z: number, color: number): void => {
+    const { c, ctx } = (() => {
+      const c = document.createElement("canvas");
+      c.width = 128;
+      c.height = 128;
+      const ctx = c.getContext("2d");
+      if (!ctx) throw new Error("2d");
+      ctx.fillStyle = "rgba(0,0,0,0)";
+      ctx.fillRect(0, 0, 128, 128);
+      ctx.font = "bold 96px Rajdhani, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = ch === "A" ? "#c45c2c" : "#3c6cc4";
+      ctx.fillText(ch, 64, 70);
+      return { c, ctx };
+    })();
+    void ctx;
+    const map = new THREE.CanvasTexture(c);
+    map.colorSpace = THREE.SRGBColorSpace;
+    const mark = new THREE.Mesh(
+      new THREE.CircleGeometry(1.7, 28),
+      new THREE.MeshStandardMaterial({ color, transparent: true, opacity: 0.42, roughness: 0.9 }),
+    );
+    mark.rotation.x = -Math.PI / 2;
+    mark.position.set(x, 0.03, z);
+    scene.add(mark);
+    const board = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.4, 1.4),
+      new THREE.MeshStandardMaterial({ map, transparent: true, roughness: 0.45, metalness: 0.1 }),
+    );
+    board.position.set(x, 2.15, z);
+    board.castShadow = true;
+    scene.add(board);
+    const board2 = board.clone();
+    board2.rotation.y = Math.PI;
+    scene.add(board2);
+  };
+
   // Outer walls
-  addBox(0, -36, 82, 1.2, 5.2, darkWall);
-  addBox(0, 36, 82, 1.2, 5.2, darkWall);
-  addBox(-40, 0, 1.2, 73, 5.2, darkWall);
-  addBox(40, 0, 1.2, 73, 5.2, darkWall);
+  addWall(0, -36, 82, 1.2, 5.2, darkWall);
+  addWall(0, 36, 82, 1.2, 5.2, darkWall);
+  addWall(-40, 0, 1.2, 73, 5.2, darkWall);
+  addWall(40, 0, 1.2, 73, 5.2, darkWall);
 
-  // Mid corridor walls with door gaps
-  addBox(-7, -14, 1.1, 16, 4.6, wallMat);
-  addBox(-7, 16, 1.1, 12, 4.6, wallMat);
-  addBox(7, -10, 1.1, 10, 4.6, wallMat);
-  addBox(7, 18, 1.1, 10, 4.6, wallMat);
+  addWall(-7, -14, 1.1, 16, 4.6, wallMat);
+  addWall(-7, 16, 1.1, 12, 4.6, wallMat);
+  addWall(7, -10, 1.1, 10, 4.6, wallMat);
+  addWall(7, 18, 1.1, 10, 4.6, wallMat);
+  addWall(22, -16, 1.1, 22, 4.6, wallMat);
+  addWall(22, 22, 1.1, 10, 4.6, wallMat);
+  addWall(31, 30, 16, 1.1, 4.2, wallMat);
+  addWall(31, 12, 10, 1.1, 3.6, wallMat);
+  addWall(14, 8, 12, 1.1, 2.8, wallMat);
+  addWall(-22, -16, 1.1, 18, 4.4, wallMat);
+  addWall(-22, 6, 16, 1.1, 4.4, wallMat);
+  addWall(-30, -2, 1.1, 14, 4.4, wallMat);
+  addWall(-30, 28, 16, 1.1, 4.2, wallMat);
+  addWall(-16, 22, 1.1, 12, 4.2, wallMat);
+  addWall(4, 26, 18, 1.1, 3.8, wallMat);
 
-  // Long A west wall (opens to cat and A)
-  addBox(22, -16, 1.1, 22, 4.6, wallMat);
-  addBox(22, 22, 1.1, 10, 4.6, wallMat);
+  // Door pillars
+  addBox(-7, -5.8, 0.42, 0.42, 4.2, trimMat);
+  addBox(-7, 9.8, 0.42, 0.42, 4.2, trimMat);
+  addBox(7, -4.8, 0.42, 0.42, 4.2, trimMat);
+  addBox(7, 12.8, 0.42, 0.42, 4.2, trimMat);
 
-  // A site north / south lips
-  addBox(31, 30, 16, 1.1, 4.2, wallMat);
-  addBox(31, 12, 10, 1.1, 3.6, wallMat);
-
-  // Catwalk railing / divider
-  addBox(14, 8, 12, 1.1, 2.8, wallMat);
-
-  // B tunnels
-  addBox(-22, -16, 1.1, 18, 4.4, wallMat);
-  addBox(-22, 6, 16, 1.1, 4.4, wallMat);
-  addBox(-30, -2, 1.1, 14, 4.4, wallMat);
-
-  // B site lips
-  addBox(-30, 28, 16, 1.1, 4.2, wallMat);
-  addBox(-16, 22, 1.1, 12, 4.2, wallMat);
-
-  // CT connector
-  addBox(4, 26, 18, 1.1, 3.8, wallMat);
-
-  // Cover crates — mid
-  addBox(0, 1, 1.4, 1.4, 1.15, crateMat);
-  addBox(2.2, -1.2, 1.3, 2.6, 1.85, woodMat);
-  addBox(-2.4, 3.2, 2.4, 1.2, 1.1, crateMat);
+  addCrate(0, 1, 1.4, 1.4, 1.15);
+  addCrate(2.2, -1.2, 1.3, 2.6, 1.85);
+  addCrate(-2.4, 3.2, 2.4, 1.2, 1.1);
   addBox(0.6, 8, 1.2, 3.2, 1.2, concrete);
 
-  // T spawn cover
-  addBox(6, -26, 1.4, 2.8, 1.2, crateMat);
-  addBox(12, -22, 2.2, 1.2, 1.8, woodMat);
-  addBox(-2, -24, 1.3, 1.3, 1.1, crateMat);
+  addCrate(6, -26, 1.4, 2.8, 1.2);
+  addCrate(12, -22, 2.2, 1.2, 1.8);
+  addCrate(-2, -24, 1.3, 1.3, 1.1);
 
-  // Long A boxes
-  addBox(28, -8, 1.5, 1.5, 1.2, crateMat);
-  addBox(32, 2, 2.4, 1.2, 1.8, woodMat);
+  addCrate(28, -8, 1.5, 1.5, 1.2);
+  addCrate(32, 2, 2.4, 1.2, 1.8);
   addBox(26, 8, 1.2, 2.2, 1.15, concrete);
 
-  // A site
   addBox(30, 22, 3.4, 1.4, 0.55, concrete);
-  addBox(27, 20, 1.4, 1.4, 1.2, crateMat);
-  addBox(33, 24, 1.3, 2.6, 1.85, woodMat);
-  addBox(29, 26, 2.2, 1.2, 1.15, crateMat);
+  addCrate(27, 20, 1.4, 1.4, 1.2);
+  addCrate(33, 24, 1.3, 2.6, 1.85);
+  addCrate(29, 26, 2.2, 1.2, 1.15);
 
-  // Cat
-  addBox(14, 12, 1.4, 1.4, 1.1, crateMat);
-  addBox(17, 14, 2.2, 1.1, 1.7, woodMat);
+  addCrate(14, 12, 1.4, 1.4, 1.1);
+  addCrate(17, 14, 2.2, 1.1, 1.7);
 
-  // B site
   addBox(-28, 20, 3.2, 1.4, 0.55, concrete);
-  addBox(-26, 18, 1.4, 1.4, 1.2, crateMat);
-  addBox(-32, 22, 1.3, 2.4, 1.8, woodMat);
-  addBox(-24, 24, 2.2, 1.2, 1.15, crateMat);
+  addCrate(-26, 18, 1.4, 1.4, 1.2);
+  addCrate(-32, 22, 1.3, 2.4, 1.8);
+  addCrate(-24, 24, 2.2, 1.2, 1.15);
 
-  // Tunnels boxes
-  addBox(-18, -8, 1.3, 1.3, 1.1, crateMat);
-  addBox(-26, -6, 1.2, 2.2, 1.7, woodMat);
+  addCrate(-18, -8, 1.3, 1.3, 1.1);
+  addCrate(-26, -6, 1.2, 2.2, 1.7);
 
-  // CT spawn
-  addBox(8, 30, 2.4, 1.2, 1.2, crateMat);
-  addBox(2, 32, 1.3, 1.3, 1.8, woodMat);
+  addCrate(8, 30, 2.4, 1.2, 1.2);
+  addCrate(2, 32, 1.3, 1.3, 1.8);
 
-  // Decorative towers
   addBox(-38, 34, 2.2, 2.2, 7.5, trimMat, 3.75);
   addBox(38, -34, 2.2, 2.2, 7.5, trimMat, 3.75);
   addBox(38, 34, 2.4, 2.4, 6.2, metal, 3.1);
 
-  // Site markers
-  const aMark = new THREE.Mesh(
-    new THREE.CircleGeometry(1.6, 24),
-    new THREE.MeshBasicMaterial({ color: 0xc45c2c, transparent: true, opacity: 0.55 }),
-  );
-  aMark.rotation.x = -Math.PI / 2;
-  aMark.position.set(30, 0.03, 22);
-  scene.add(aMark);
-  const bMark = aMark.clone();
-  bMark.material = new THREE.MeshBasicMaterial({ color: 0x3c6cc4, transparent: true, opacity: 0.55 });
-  bMark.position.set(-28, 0.03, 20);
-  scene.add(bMark);
+  addBarrel(3.4, -24);
+  addBarrel(4.1, -23.2);
+  addBarrel(29, 19.2);
+  addBarrel(-25, 16.6);
+  addBarrel(-1.2, 7.2);
 
-  const hemi = new THREE.HemisphereLight(0xc8dceb, 0x6a5333, 0.85);
+  addPalm(-36, -30);
+  addPalm(36, -30);
+  addPalm(-36, 32);
+  addPalm(18, -34);
+
+  addLetter("A", 30, 22, 0xc45c2c);
+  addLetter("B", -28, 20, 0x3c6cc4);
+
+  // Distant hills
+  for (const [x, z, s] of [
+    [-70, 20, 18],
+    [72, -10, 16],
+    [-60, -40, 14],
+    [65, 40, 20],
+  ] as Array<[number, number, number]>) {
+    const hill = new THREE.Mesh(new THREE.ConeGeometry(s, s * 0.55, 7), mat(0x6a5a3e, { rough: 0.95 }));
+    hill.position.set(x, s * 0.12, z);
+    scene.add(hill);
+  }
+
+  const hemi = new THREE.HemisphereLight(0xcde6f5, 0x6a5333, 0.7);
   scene.add(hemi);
-  const sun = new THREE.DirectionalLight(0xffe6b8, 1.15);
-  sun.position.set(-30, 48, 18);
+  const sun = new THREE.DirectionalLight(0xffe3b0, 1.55);
+  sun.position.set(-34, 52, 20);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
-  sun.shadow.camera.left = -50;
-  sun.shadow.camera.right = 50;
-  sun.shadow.camera.top = 50;
-  sun.shadow.camera.bottom = -50;
+  sun.shadow.camera.left = -55;
+  sun.shadow.camera.right = 55;
+  sun.shadow.camera.top = 55;
+  sun.shadow.camera.bottom = -55;
+  sun.shadow.bias = -0.00025;
   scene.add(sun);
-  scene.add(new THREE.AmbientLight(0xffffff, 0.16));
+  scene.add(new THREE.AmbientLight(0xfff6e8, 0.18));
 
   scene.background = new THREE.Color(0x87b0cc);
-  scene.fog = new THREE.Fog(0xc4b48a, 38, 92);
+  scene.fog = new THREE.Fog(0xd4c09a, 48, 105);
 
   const waypoints: Waypoint[] = [
     { id: "tspawn", pos: { x: 8, y: 0, z: -26 }, neighbors: ["tmid", "longt", "tunnels"] },

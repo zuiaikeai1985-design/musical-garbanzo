@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { GameAudio } from "./audio";
 import { createBots, type Bot } from "./bots";
 import { damageActor, traceShot } from "./combat";
@@ -37,6 +38,7 @@ export class Game {
   private respawnT = 0;
   private killer = "";
   private running = false;
+  private menuT = 0;
 
   constructor(canvas: HTMLCanvasElement) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -44,11 +46,17 @@ export class Game {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    this.camera = new THREE.PerspectiveCamera(78, window.innerWidth / window.innerHeight, 0.08, 160);
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.12;
+    this.camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.08, 180);
     this.input.attach(canvas);
     this.fx = new Effects(this.scene);
     this.scene.add(this.camera);
     this.world = buildWorld(this.scene);
+    const pmrem = new THREE.PMREMGenerator(this.renderer);
+    this.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    this.scene.environmentIntensity = 0.42;
     window.addEventListener("resize", this.onResize);
     canvas.addEventListener("contextmenu", (e) => e.preventDefault());
     this.bindUi(canvas);
@@ -89,7 +97,9 @@ export class Game {
     this.audio.unlock();
     this.clearBots();
     this.player = new Player(team, this.camera);
-    this.viewmodel = new Viewmodel(this.camera);
+    this.viewmodel = new Viewmodel(this.camera, team);
+    this.camera.fov = 78;
+    this.camera.updateProjectionMatrix();
     this.bots = createBots(team, this.scene);
     this.timeLeft = MATCH_TIME;
     this.incomeT = 0;
@@ -123,9 +133,19 @@ export class Game {
   private tick = (): void => {
     const dt = Math.min(0.033, this.clock.getDelta());
     if (this.mode === "play" && this.player) this.updatePlay(dt);
+    else if (this.mode === "menu" || this.mode === "over") this.updateMenuCam(dt);
     this.fx.update(dt);
     this.renderer.render(this.scene, this.camera);
   };
+
+  private updateMenuCam(dt: number): void {
+    this.menuT += dt;
+    const r = 30;
+    this.camera.position.set(Math.sin(this.menuT * 0.1) * r, 11.5, Math.cos(this.menuT * 0.1) * r + 2);
+    this.camera.lookAt(2, 1.4, 4);
+    this.camera.fov = 52;
+    this.camera.updateProjectionMatrix();
+  }
 
   private updatePlay(dt: number): void {
     const player = this.player;
