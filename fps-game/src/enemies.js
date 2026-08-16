@@ -145,7 +145,7 @@ export class EnemyManager {
   notifyGunshot(playerPos) {
     for (const bot of this.bots) {
       if (bot.state === "dead" || bot.state === "combat") continue;
-      if (bot.pos.distanceTo(playerPos) < 55) {
+      if (bot.pos.distanceTo(playerPos) < 80) {
         bot.lastKnown = playerPos.clone();
         if (bot.state === "patrol") {
           bot.state = "hunt";
