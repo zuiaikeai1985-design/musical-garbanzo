@@ -129,6 +129,20 @@ export class EnemyManager {
     }
   }
 
+  /** 指派路径；若直接走向第二个路径点更近且无阻挡则跳过第一个（避免走回头路震荡） */
+  _assignPath(bot, path, targetPos) {
+    bot.path = path;
+    bot.pathIdx = 0;
+    if (path.length >= 2) {
+      const w0 = this.world.waypoints[path[0]];
+      const w1 = this.world.waypoints[path[1]];
+      const direct = bot.pos.distanceTo(w1);
+      const viaW0 = bot.pos.distanceTo(w0) + w0.distanceTo(w1);
+      if (direct < viaW0 - 0.3 && this.world.walkClear(bot.pos, w1)) bot.pathIdx = 1;
+    }
+    bot.pathTarget = targetPos ? targetPos.clone() : null;
+  }
+
   _newPatrolPath(bot) {
     const from = this.world.nearestWaypoint(bot.pos);
     let to = this.world.randomWaypoint();
@@ -136,15 +150,13 @@ export class EnemyManager {
     while ((to === from || this.world.waypoints[to].distanceTo(bot.pos) < 6) && guard++ < 10) {
       to = this.world.randomWaypoint();
     }
-    bot.path = this.world.findPath(from, to);
-    bot.pathIdx = 0;
+    this._assignPath(bot, this.world.findPath(from, to), null);
   }
 
   _pathTo(bot, targetPos) {
     const from = this.world.nearestWaypoint(bot.pos);
     const to = this.world.nearestWaypoint(targetPos);
-    bot.path = this.world.findPath(from, to);
-    bot.pathIdx = 0;
+    this._assignPath(bot, this.world.findPath(from, to), targetPos);
   }
 
   /** 玩家开枪产生的噪音，附近敌人被惊动 */
@@ -313,11 +325,13 @@ export class EnemyManager {
         }
       }
 
-      // 追击时定期重新寻路
+      // 追击时仅当目标位置有明显变化才重新寻路（避免来回震荡）
       if (bot.state === "hunt" && bot.lastKnown) {
         bot.repathTimer -= dt;
         if (bot.repathTimer <= 0) {
-          this._pathTo(bot, bot.lastKnown);
+          if (!bot.pathTarget || bot.pathTarget.distanceTo(bot.lastKnown) > 3) {
+            this._pathTo(bot, bot.lastKnown);
+          }
           bot.repathTimer = 2;
         }
       }

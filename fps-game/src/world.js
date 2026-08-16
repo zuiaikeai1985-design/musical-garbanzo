@@ -329,7 +329,7 @@ export class World {
         const b = this.waypoints[j];
         const dist = a.distanceTo(b);
         if (dist > 17) continue;
-        if (this._walkClear(a, b)) {
+        if (this.walkClear(a, b)) {
           this.edges[i].push(j);
           this.edges[j].push(i);
         }
@@ -354,7 +354,7 @@ export class World {
   }
 
   /** 两点间是否可以直线行走（考虑身位宽度与低矮障碍） */
-  _walkClear(a, b) {
+  walkClear(a, b) {
     const dir = b.clone().sub(a);
     const dist = dir.length();
     dir.normalize();
