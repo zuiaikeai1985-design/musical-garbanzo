@@ -263,10 +263,10 @@ export function createSky(): THREE.Mesh {
         float h = clamp(vDir.y * 0.5 + 0.5, 0.0, 1.0);
         vec3 col = mix(horizon, mid, smoothstep(0.42, 0.58, h));
         col = mix(col, top, smoothstep(0.58, 0.95, h));
-        float sunDisk = pow(max(dot(normalize(vDir), sun), 0.0), 220.0);
-        float glow = pow(max(dot(normalize(vDir), sun), 0.0), 8.0);
-        col += vec3(1.0, 0.92, 0.7) * sunDisk * 2.2;
-        col += vec3(1.0, 0.78, 0.4) * glow * 0.28;
+        float sunDisk = pow(max(dot(normalize(vDir), sun), 0.0), 1400.0);
+        float glow = pow(max(dot(normalize(vDir), sun), 0.0), 28.0);
+        col += vec3(1.0, 0.94, 0.78) * sunDisk * 1.6;
+        col += vec3(1.0, 0.82, 0.5) * glow * 0.16;
         gl_FragColor = vec4(col, 1.0);
       }
     `,
