@@ -143,7 +143,7 @@ export class EnemyManager {
   notifyGunshot(playerPos) {
     for (const bot of this.bots) {
       if (bot.state === "dead" || bot.state === "combat") continue;
-      if (bot.pos.distanceTo(playerPos) < 30) {
+      if (bot.pos.distanceTo(playerPos) < 55) {
         bot.lastKnown = playerPos.clone();
         if (bot.state === "patrol") {
           bot.state = "hunt";
@@ -232,7 +232,7 @@ export class EnemyManager {
         const targetYaw = Math.atan2(-toPlayer.x, -toPlayer.z);
         bot.yaw = this._lerpAngle(bot.yaw, targetYaw, Math.min(1, dt * 7));
 
-        // 横移 + 距离控制
+        // 横移 + 距离控制（技术越高越会走位）
         bot.strafeTimer -= dt;
         if (bot.strafeTimer <= 0) {
           bot.strafeDir *= -1;
@@ -244,7 +244,9 @@ export class EnemyManager {
         if (dist > 26) moveDir.addScaledVector(fwd, 1.4);
         else if (dist < 6) moveDir.addScaledVector(fwd, -0.9);
         moveDir.normalize();
-        moveSpeed = 2.4;
+        moveSpeed = lerp(0.9, 2.8, bot.skill);
+        // 低技术敌人开火瞬间会站定
+        if (bot.skill < 0.5 && sees && bot.reactTimer <= 0 && bot.burstLeft > 0) moveSpeed = 0;
 
         // 开火
         if (sees && playerAlive) {
