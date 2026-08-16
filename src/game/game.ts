@@ -107,7 +107,7 @@ export class Game {
 
   private placeAll(): void {
     if (!this.player) return;
-    const yaw = this.player.team === "T" ? 0 : Math.PI;
+    const yaw = this.player.team === "T" ? Math.PI : 0;
     const spawn = this.world.spawns[this.player.team][0];
     this.player.spawnAt(spawn.x, spawn.z, yaw);
     let ti = 1;
@@ -116,7 +116,7 @@ export class Game {
       const list = this.world.spawns[bot.team];
       const idx = bot.team === "T" ? ti++ : cti++;
       const s = list[idx % list.length];
-      bot.spawnAt(s.x + (Math.random() - 0.5), s.z + (Math.random() - 0.5), bot.team === "T" ? 0 : Math.PI);
+      bot.spawnAt(s.x + (Math.random() - 0.5), s.z + (Math.random() - 0.5), bot.team === "T" ? Math.PI : 0);
     }
   }
 
@@ -374,7 +374,7 @@ export class Game {
     if (!player) return;
     const list = this.world.spawns[player.team];
     const s = list[Math.floor(Math.random() * list.length)];
-    player.spawnAt(s.x, s.z, player.team === "T" ? 0 : Math.PI);
+    player.spawnAt(s.x, s.z, player.team === "T" ? Math.PI : 0);
     this.hud.setDeath(false, "", 0);
     void this.renderer.domElement.requestPointerLock();
   }
@@ -382,7 +382,7 @@ export class Game {
   private respawnBot(bot: Bot): void {
     const list = this.world.spawns[bot.team];
     const s = list[Math.floor(Math.random() * list.length)];
-    bot.spawnAt(s.x, s.z, bot.team === "T" ? 0 : Math.PI);
+    bot.spawnAt(s.x, s.z, bot.team === "T" ? Math.PI : 0);
   }
 
   private handleBuyKeys(): void {

@@ -44,7 +44,7 @@ export class Player {
     const pistol = team === "T" ? "glock" : "usp";
     const rifle = team === "T" ? "ak47" : "m4a4";
     this.weapons = [createWeaponState(rifle), createWeaponState(pistol), createWeaponState("knife")];
-    this.active = 1;
+    this.active = 0;
   }
 
   get weapon(): WeaponState {
