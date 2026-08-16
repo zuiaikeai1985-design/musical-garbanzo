@@ -106,14 +106,15 @@ export class Player {
     this.height = this.crouching ? CROUCH_HEIGHT : STAND_HEIGHT;
     this.eye = lerp(this.eye, this.crouching ? CROUCH_EYE : STAND_EYE, Math.min(1, dt * 12));
 
-    // 移动
+    // 移动（wasPressed 兜底：低帧率下快速敲击也算一帧移动）
+    const keyActive = (code) => input.isDown(code) || input.wasPressed(code);
     let ix = 0;
     let iz = 0;
     if (!movementLocked && this.alive) {
-      if (input.isDown("KeyW")) iz += 1;
-      if (input.isDown("KeyS")) iz -= 1;
-      if (input.isDown("KeyA")) ix -= 1;
-      if (input.isDown("KeyD")) ix += 1;
+      if (keyActive("KeyW")) iz += 1;
+      if (keyActive("KeyS")) iz -= 1;
+      if (keyActive("KeyA")) ix -= 1;
+      if (keyActive("KeyD")) ix += 1;
     }
     const walking = input.isDown("ShiftLeft") || input.isDown("ShiftRight");
     let speed = this.crouching ? CROUCH_SPEED : walking ? WALK_SPEED : RUN_SPEED;
@@ -130,7 +131,7 @@ export class Player {
     this.vel.x = lerp(this.vel.x, wish.x, Math.min(1, accel * dt));
     this.vel.z = lerp(this.vel.z, wish.z, Math.min(1, accel * dt));
 
-    if (!movementLocked && this.alive && input.isDown("Space") && this.onGround) {
+    if (!movementLocked && this.alive && keyActive("Space") && this.onGround) {
       this.vel.y = JUMP_SPEED;
       this.onGround = false;
     }
