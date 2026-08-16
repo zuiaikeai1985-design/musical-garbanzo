@@ -66,12 +66,7 @@ class MapBuilder {
         map = metalTexture(repeat[0], repeat[1]);
         break;
     }
-    const material = new THREE.MeshStandardMaterial({
-      map,
-      color,
-      roughness: 0.92,
-      metalness: kind === "metal" ? 0.35 : 0.02,
-    });
+    const material = new THREE.MeshLambertMaterial({ map, color });
     this.materials.set(key, material);
     return material;
   }
@@ -206,7 +201,7 @@ export function buildMap(scene: THREE.Scene): GameMap {
   // ---------- ground ----------
   const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(HALF * 2, HALF * 2),
-    new THREE.MeshStandardMaterial({ map: sandTexture(30), roughness: 1 }),
+    new THREE.MeshLambertMaterial({ map: sandTexture(30) }),
   );
   ground.rotation.x = -Math.PI / 2;
   ground.receiveShadow = true;
@@ -314,12 +309,7 @@ export function buildMap(scene: THREE.Scene): GameMap {
     [-30, 18],
     [8, -30],
   ];
-  const barrelMat = new THREE.MeshStandardMaterial({
-    map: metalTexture(2, 1),
-    color: 0xb8563a,
-    roughness: 0.7,
-    metalness: 0.3,
-  });
+  const barrelMat = new THREE.MeshLambertMaterial({ map: metalTexture(2, 1), color: 0xb8563a });
   const barrelGeometries: THREE.BufferGeometry[] = [];
   for (const [x, z] of barrelPositions) {
     const geometry = new THREE.CylinderGeometry(0.55, 0.55, 1.5, 14);

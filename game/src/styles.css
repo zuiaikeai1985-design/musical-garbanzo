@@ -219,7 +219,7 @@ body {
 /* top bar */
 #top-bar {
   position: absolute;
-  top: 14px;
+  top: 20px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -242,9 +242,9 @@ body {
 }
 
 .top-cell .label {
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 2px;
-  opacity: 0.6;
+  opacity: 0.75;
 }
 
 .top-cell .value {

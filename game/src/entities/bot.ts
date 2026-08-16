@@ -50,13 +50,13 @@ const EYE_HEIGHT = 1.55;
 /** Bots ignore the player beyond this range, so long sightlines stay playable. */
 const VISION_RANGE = 48;
 
-const SKIN = new THREE.MeshStandardMaterial({ color: 0xc79a6c, roughness: 0.85 });
-const SHIRT = new THREE.MeshStandardMaterial({ color: 0x7d3b34, roughness: 0.9 });
-const VEST = new THREE.MeshStandardMaterial({ color: 0x33302a, roughness: 0.8, metalness: 0.15 });
-const PANTS = new THREE.MeshStandardMaterial({ color: 0x4a4636, roughness: 0.95 });
-const BOOT = new THREE.MeshStandardMaterial({ color: 0x22201c, roughness: 0.95 });
-const GUN = new THREE.MeshStandardMaterial({ color: 0x23262a, roughness: 0.5, metalness: 0.6 });
-const BERET = new THREE.MeshStandardMaterial({ color: 0xa8231f, roughness: 0.85 });
+const SKIN = new THREE.MeshLambertMaterial({ color: 0xc79a6c });
+const SHIRT = new THREE.MeshLambertMaterial({ color: 0x7d3b34 });
+const VEST = new THREE.MeshLambertMaterial({ color: 0x33302a });
+const PANTS = new THREE.MeshLambertMaterial({ color: 0x4a4636 });
+const BOOT = new THREE.MeshLambertMaterial({ color: 0x22201c });
+const GUN = new THREE.MeshLambertMaterial({ color: 0x23262a });
+const BERET = new THREE.MeshLambertMaterial({ color: 0xa8231f });
 
 function part(
   w: number,
@@ -88,6 +88,8 @@ export class Bot {
   removeMe = false;
   /** True while this bot has line of sight on the player. */
   spotted = false;
+  /** True while the player has line of sight on this bot. */
+  visibleToPlayer = false;
 
   private state: BotState = "idle";
   private stateTimer = 0;
@@ -110,7 +112,7 @@ export class Bot {
   private repathTimer = 0;
 
   private readonly headBox = new THREE.Box3();
-  private readonly chestBox = new THREE.Box3();
+  readonly chestBox = new THREE.Box3();
   private readonly stomachBox = new THREE.Box3();
   private readonly legsBox = new THREE.Box3();
 
@@ -358,6 +360,7 @@ export class Bot {
     if (!this.alive) {
       this.marker.visible = false;
       this.spotted = false;
+      this.visibleToPlayer = false;
       this.deathTimer += dt;
       // Topple over, then sink into the ground and disappear.
       const fall = Math.min(1, this.deathTimer / 0.5);
@@ -372,7 +375,7 @@ export class Bot {
 
     const visible = this.canSee(world);
     this.spotted = visible;
-    this.marker.visible = world.showMarkers && visible;
+    this.marker.visible = world.showMarkers && (visible || this.visibleToPlayer);
     if (visible) {
       this.lastKnownPlayer.copy(world.player.position);
       this.hasLastKnown = true;

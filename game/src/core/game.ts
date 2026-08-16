@@ -825,8 +825,19 @@ export class Game {
       damagePlayer: this.damagePlayer,
     };
 
+    const eye = this.player.eyePosition;
+    const toBot = new THREE.Vector3();
     for (let i = this.bots.length - 1; i >= 0; i--) {
       const bot = this.bots[i];
+      if (bot.alive) {
+        // Drives both the head marker and the radar blip: enemies you can
+        // actually see are known to you, the same way CS reveals spotted foes.
+        bot.chestBox.getCenter(toBot).sub(eye);
+        const distance = toBot.length();
+        toBot.divideScalar(distance || 1);
+        bot.visibleToPlayer =
+          distance < 60 && rayBoxes(eye, toBot, this.map.colliders, distance - 0.3) === null;
+      }
       bot.update(dt, botWorld);
       if (bot.removeMe) {
         this.scene.remove(bot.group);
@@ -844,7 +855,10 @@ export class Game {
     this.radar.update(
       dt,
       { position: this.player.position, yaw: this.player.yaw },
-      this.bots.map((bot) => ({ position: bot.position, spotted: bot.alive && bot.spotted })),
+      this.bots.map((bot) => ({
+        position: bot.position,
+        spotted: bot.alive && (bot.spotted || bot.visibleToPlayer),
+      })),
     );
 
     this.effects.update(dt);
