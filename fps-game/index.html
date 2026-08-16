@@ -529,6 +529,34 @@
         color: #cfd4c2;
         border: 1px solid rgba(255, 255, 255, 0.3);
       }
+      #difficulty {
+        display: flex;
+        gap: 8px;
+      }
+      #difficulty .diff {
+        background: transparent;
+        color: #b9beac;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        padding: 9px 22px;
+        font-size: 15px;
+        letter-spacing: 2px;
+        margin-top: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+      }
+      #difficulty .diff small {
+        font-size: 10px;
+        opacity: 0.7;
+        letter-spacing: 1px;
+      }
+      #difficulty .diff.selected {
+        background: linear-gradient(180deg, #ffd257, #e8a938);
+        color: #1a1408;
+        border-color: transparent;
+        font-weight: 700;
+      }
       .overlay .help {
         margin-top: 22px;
         font-size: 13px;
@@ -611,6 +639,11 @@
     <div id="menu" class="overlay">
       <h1>沙漠突袭<span>DUST STRIKE</span></h1>
       <p>类 CS 第一人称射击 · 消灭全部敌人赢得回合</p>
+      <div id="difficulty">
+        <button class="diff" data-diff="easy">简单<small>辅助瞄准</small></button>
+        <button class="diff selected" data-diff="normal">普通</button>
+        <button class="diff" data-diff="hard">困难</button>
+      </div>
       <button id="btn-start">开 始 游 戏</button>
       <div class="help">
         <b>W A S D</b> 移动 · <b>鼠标</b> 视角/射击 · <b>右键</b> 瞄准 · <b>R</b> 换弹 · <b>B</b> 购买装备<br />

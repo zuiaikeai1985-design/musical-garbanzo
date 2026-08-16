@@ -301,6 +301,8 @@ export class WeaponSystem {
     this.bloom = 0;
     this.aim = 0; // 0=腰射 1=瞄准
     this.aimToggle = false;
+    this.aimAssist = 0; // 简单难度的辅助瞄准强度
+
     this.flashTimer = 0;
     this.prevFireHeld = false;
     this.onAmmoChanged = null;
@@ -553,6 +555,30 @@ export class WeaponSystem {
     return this.models[this.current].muzzle.getWorldPosition(new THREE.Vector3());
   }
 
+  /** 辅助瞄准：把弹道向锥形范围内最近的敌人小幅吸附（仅简单难度） */
+  _applyAimAssist(origin, dir) {
+    if (!this.aimAssist) return dir;
+    const cone = 4 * DEG;
+    let bestAngle = cone;
+    let bestDir = null;
+    for (const bot of this.enemies.bots) {
+      if (bot.state === "dead") continue;
+      for (const h of [1.1, 1.58]) {
+        const target = new THREE.Vector3(bot.pos.x, bot.pos.y + h, bot.pos.z).sub(origin);
+        const dist = target.length();
+        if (dist < 1.5 || dist > 60) continue;
+        target.normalize();
+        const angle = dir.angleTo(target);
+        if (angle < bestAngle) {
+          bestAngle = angle;
+          bestDir = target;
+        }
+      }
+    }
+    if (bestDir) dir.lerp(bestDir, this.aimAssist).normalize();
+    return dir;
+  }
+
   _fire() {
     const def = this.def;
     const a = this.ammo[this.current];
@@ -565,7 +591,7 @@ export class WeaponSystem {
     const origin = this.player.eyePos;
     const muzzle = this._muzzleWorld();
     for (let p = 0; p < pellets; p++) {
-      const dir = this._spreadDir();
+      const dir = this._applyAimAssist(origin, this._spreadDir());
       const wallHit = this.world.raycast(origin, dir, def.range);
       const maxD = wallHit ? wallHit.dist : def.range;
       const botHit = this.enemies.raycast(origin, dir, maxD);

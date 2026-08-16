@@ -16,6 +16,27 @@ const ROUND_TIME = 115;
 const FREEZE_TIME = 4;
 const BUY_TIME_AFTER_LIVE = 10;
 
+const DIFFICULTIES = {
+  easy: {
+    skill: (r) => clamp(0.08 + r * 0.04, 0, 0.5),
+    count: (r) => Math.min(2 + Math.ceil(r / 2), 6),
+    dmgScale: 0.55,
+    aimAssist: 0.75,
+  },
+  normal: {
+    skill: (r) => clamp(0.28 + r * 0.06, 0, 0.9),
+    count: (r) => Math.min(2 + r, 8),
+    dmgScale: 1,
+    aimAssist: 0,
+  },
+  hard: {
+    skill: (r) => clamp(0.5 + r * 0.06, 0, 1),
+    count: (r) => Math.min(3 + r, 10),
+    dmgScale: 1.25,
+    aimAssist: 0,
+  },
+};
+
 const BUY_ITEMS = [
   { key: "1", id: "mp5", kind: "weapon", label: "MP5 冲锋枪", price: WEAPONS.mp5.price },
   { key: "2", id: "shotgun", kind: "weapon", label: "XM 霰弹枪", price: WEAPONS.shotgun.price },
@@ -75,6 +96,7 @@ class Game {
     );
 
     this.state = "menu";
+    this.difficulty = "normal";
     this.money = START_MONEY;
     this.round = 1;
     this.scoreCT = 0;
@@ -134,6 +156,14 @@ class Game {
   }
 
   _wireUI() {
+    for (const btn of document.querySelectorAll("#difficulty .diff")) {
+      btn.addEventListener("click", () => {
+        this.difficulty = btn.dataset.diff;
+        for (const b of document.querySelectorAll("#difficulty .diff")) {
+          b.classList.toggle("selected", b === btn);
+        }
+      });
+    }
     document.getElementById("btn-start").addEventListener("click", () => {
       this.audio.init();
       this.audio.resume();
@@ -171,9 +201,11 @@ class Game {
     this.weapons.reset(this.diedLastRound);
     this.diedLastRound = false;
 
-    const count = Math.min(2 + this.round, 8);
-    const skill = clamp(0.28 + this.round * 0.06, 0, 0.9);
-    this.enemies.spawnWave(count, skill);
+    const diff = DIFFICULTIES[this.difficulty];
+    const count = diff.count(this.round);
+    const skill = diff.skill(this.round);
+    this.enemies.spawnWave(count, skill, diff.dmgScale);
+    this.weapons.aimAssist = diff.aimAssist;
 
     this.hud.setRound(this.round);
     this.hud.setScore(this.scoreCT, this.scoreT);

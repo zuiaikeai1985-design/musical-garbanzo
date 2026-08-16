@@ -81,8 +81,9 @@ export class EnemyManager {
     return this.bots.filter((b) => b.state !== "dead").length;
   }
 
-  spawnWave(count, skill) {
+  spawnWave(count, skill, dmgScale = 1) {
     this.clear();
+    this.dmgScale = dmgScale;
     const spawns = [...this.world.enemySpawns].sort(() => Math.random() - 0.5);
     for (let i = 0; i < count; i++) {
       const spawn = spawns[i % spawns.length];
@@ -195,7 +196,7 @@ export class EnemyManager {
         bot.loseTimer = 0;
         if (bot.state !== "combat") {
           bot.state = "combat";
-          bot.reactTimer = lerp(0.55, 0.18, bot.skill) + randRange(0, 0.2);
+          bot.reactTimer = lerp(0.75, 0.18, bot.skill) + randRange(0, 0.2);
         }
       } else if (bot.state === "combat") {
         bot.loseTimer += dt;
@@ -261,7 +262,7 @@ export class EnemyManager {
               }
               this._shootAtPlayer(bot, player, dt);
               bot.burstLeft--;
-              bot.fireTimer = bot.burstLeft > 0 ? 1 / bot.gun.rate : randRange(0.5, 1.1) * lerp(1.4, 0.7, bot.skill);
+              bot.fireTimer = bot.burstLeft > 0 ? 1 / bot.gun.rate : randRange(0.5, 1.1) * lerp(1.8, 0.7, bot.skill);
             }
           }
         }
@@ -366,7 +367,7 @@ export class EnemyManager {
 
     const dir = chest.sub(eye).normalize();
     // 散布：技术越高越准，玩家移动、距离都会降低命中
-    let spreadDeg = lerp(4.2, 1.5, bot.skill);
+    let spreadDeg = lerp(5.2, 1.5, bot.skill);
     spreadDeg += clamp(player.moveSpeed2D / 6.4, 0, 1) * 2.2;
     spreadDeg += dist * 0.03;
     if (player.crouching) spreadDeg += 0.4;
@@ -393,7 +394,7 @@ export class EnemyManager {
     if (playerT !== null) {
       endPoint = eye.clone().addScaledVector(dir, playerT);
       const falloff = clamp(1 - (dist - 12) / 70, 0.5, 1);
-      const dmg = Math.round(randRange(bot.gun.dmgMin, bot.gun.dmgMax) * falloff);
+      const dmg = Math.max(1, Math.round(randRange(bot.gun.dmgMin, bot.gun.dmgMax) * falloff * (this.dmgScale || 1)));
       player.takeDamage(dmg, bot.pos.clone());
     } else if (wallHit) {
       endPoint = wallHit.point;
