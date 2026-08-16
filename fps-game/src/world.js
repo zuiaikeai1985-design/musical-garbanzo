@@ -162,6 +162,7 @@ export class World {
     this.scene.add(hemi);
 
     const sun = new THREE.DirectionalLight("#fff1d0", 2.0);
+    this.sun = sun;
     sun.position.set(45, 70, 25);
     sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);

@@ -26,13 +26,28 @@ const BUY_ITEMS = [
   { key: "7", id: "ammo", kind: "ammo", label: "补满弹药", price: 200 },
 ];
 
+/** 检测软件渲染（SwiftShader/llvmpipe 等），自动降低画质保证帧率 */
+function isSoftwareGL() {
+  try {
+    const c = document.createElement("canvas");
+    const gl = c.getContext("webgl2") || c.getContext("webgl");
+    if (!gl) return true;
+    const ext = gl.getExtension("WEBGL_debug_renderer_info");
+    const name = String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER));
+    return /swiftshader|llvmpipe|softpipe|software/i.test(name);
+  } catch {
+    return false;
+  }
+}
+
 class Game {
   constructor() {
-    this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    this.lowQuality = isSoftwareGL();
+    this.renderer = new THREE.WebGLRenderer({ antialias: !this.lowQuality, powerPreference: "high-performance" });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.setPixelRatio(this.lowQuality ? 1 : Math.min(window.devicePixelRatio, 2));
+    this.renderer.shadowMap.enabled = !this.lowQuality;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
     document.getElementById("game").appendChild(this.renderer.domElement);
@@ -43,6 +58,7 @@ class Game {
 
     this.audio = new AudioManager();
     this.world = new World(this.scene);
+    if (this.lowQuality) this.world.sun.castShadow = false;
     this.effects = new Effects(this.scene);
     this.hud = new HUD();
     this.input = new Input(this.renderer.domElement);
@@ -74,7 +90,7 @@ class Game {
     this._wireUI();
 
     this.player.reset(this.world.playerSpawn);
-    this.clock = new THREE.Clock();
+    this._lastT = performance.now();
     this.renderer.setAnimationLoop(() => this._tick());
 
     window.addEventListener("resize", () => {
@@ -267,7 +283,9 @@ class Game {
   }
 
   _tick() {
-    const dt = Math.min(this.clock.getDelta(), 0.05);
+    const now = performance.now();
+    const dt = Math.min((now - this._lastT) / 1000, 0.05);
+    this._lastT = now;
     this.hud.update(dt);
     this.effects.update(dt);
 

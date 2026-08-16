@@ -9,6 +9,7 @@ export class Input {
     this.pressed = new Set(); // 本帧刚按下
     this.mouseDown = false;
     this.mouse2Down = false;
+    this.clicks = 0; // 本帧内的点击次数（低帧率下点击可能在一帧内按下又抬起）
     this.mouseDX = 0;
     this.mouseDY = 0;
     this.wheelDelta = 0;
@@ -31,7 +32,10 @@ export class Input {
     });
 
     element.addEventListener("mousedown", (e) => {
-      if (e.button === 0) this.mouseDown = true;
+      if (e.button === 0) {
+        this.mouseDown = true;
+        this.clicks++;
+      }
       if (e.button === 2) this.mouse2Down = true;
     });
     window.addEventListener("mouseup", (e) => {
@@ -84,5 +88,6 @@ export class Input {
     this.mouseDX = 0;
     this.mouseDY = 0;
     this.wheelDelta = 0;
+    this.clicks = 0;
   }
 }

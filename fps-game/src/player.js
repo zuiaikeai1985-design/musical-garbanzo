@@ -12,7 +12,8 @@ const RUN_SPEED = 6.4;
 const WALK_SPEED = 3.0;
 const CROUCH_SPEED = 2.6;
 const MOUSE_SENS = 0.0021;
-const ARROW_LOOK_SPEED = 2.2;
+const ARROW_LOOK_SPEED = 3.0;
+const ARROW_TAP_NUDGE = 0.07; // 轻点方向键的即时转角（低帧率兜底）
 
 export class Player {
   constructor(camera, world, audio) {
@@ -70,6 +71,11 @@ export class Player {
     if (input.isDown("ArrowRight")) this.yaw -= ARROW_LOOK_SPEED * dt;
     if (input.isDown("ArrowUp")) this.pitch += ARROW_LOOK_SPEED * 0.7 * dt;
     if (input.isDown("ArrowDown")) this.pitch -= ARROW_LOOK_SPEED * 0.7 * dt;
+    // 轻点方向键也保证有明显转动（低帧率下 isDown 可能捕捉不到）
+    if (input.wasPressed("ArrowLeft")) this.yaw += ARROW_TAP_NUDGE;
+    if (input.wasPressed("ArrowRight")) this.yaw -= ARROW_TAP_NUDGE;
+    if (input.wasPressed("ArrowUp")) this.pitch += ARROW_TAP_NUDGE * 0.7;
+    if (input.wasPressed("ArrowDown")) this.pitch -= ARROW_TAP_NUDGE * 0.7;
     this.pitch = clamp(this.pitch, -89 * DEG, 89 * DEG);
 
     // 蹲下

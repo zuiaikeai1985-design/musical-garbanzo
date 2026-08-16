@@ -77,7 +77,7 @@ export class HUD {
   }
 
   damageFlash() {
-    this.vignetteAlpha = Math.min(1, this.vignetteAlpha + 0.55);
+    this.vignetteAlpha = Math.min(1, this.vignetteAlpha + 0.7);
   }
 
   banner(title, sub = "", duration = 2.5, tone = "") {
@@ -134,7 +134,7 @@ export class HUD {
 
   update(dt) {
     // 受击红屏衰减
-    this.vignetteAlpha = Math.max(0, this.vignetteAlpha - dt * 1.4);
+    this.vignetteAlpha = Math.max(0, this.vignetteAlpha - dt * 1.1);
     this.vignette.style.opacity = this.vignetteAlpha.toFixed(3);
 
     if (this.hitTimer > 0) {

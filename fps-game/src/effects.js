@@ -54,7 +54,7 @@ export class Effects {
     });
     const line = new THREE.Line(geo, mat);
     this.scene.add(line);
-    this.tracers.push({ obj: line, life: 0.07, total: 0.07 });
+    this.tracers.push({ obj: line, life: 0.12, total: 0.12 });
   }
 
   /** 世界坐标枪口闪光（敌人开枪用） */
@@ -70,7 +70,7 @@ export class Effects {
     sprite.position.copy(pos);
     sprite.scale.setScalar(0.7 + Math.random() * 0.3);
     this.scene.add(sprite);
-    this.flashes.push({ obj: sprite, life: 0.05, total: 0.05 });
+    this.flashes.push({ obj: sprite, life: 0.09, total: 0.09 });
   }
 
   /** 命中特效：wall=火花+弹孔，flesh=血液 */

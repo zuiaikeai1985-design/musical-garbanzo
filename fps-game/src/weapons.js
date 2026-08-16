@@ -476,12 +476,13 @@ export class WeaponSystem {
       this.tryReload();
     }
 
-    // 开火
+    // 开火（clicks/wasPressed 兜底：低帧率下按下+抬起可能发生在同一帧内）
     const fireHeld = input.mouseDown || input.isDown("Enter");
-    const firePressed = fireHeld && !this.prevFireHeld;
+    const fireTapped = input.clicks > 0 || input.wasPressed("Enter");
+    const firePressed = (fireHeld && !this.prevFireHeld) || fireTapped;
     this.prevFireHeld = fireHeld;
     if (canFire && this.switchTimer <= 0 && this.reloadTimer <= 0 && this.fireTimer <= 0) {
-      const shouldFire = def.auto ? fireHeld : firePressed;
+      const shouldFire = def.auto ? fireHeld || fireTapped : firePressed;
       if (shouldFire || (def.type === "melee" && firePressed)) {
         if (def.type === "melee") {
           this._swingKnife();
