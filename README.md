@@ -1,20 +1,33 @@
 # Dust Outpost
 
-浏览器里就能玩的 CS 风格第一人称射击：沙城前哨地图、5v5 人机团队死斗、购买菜单、后坐力与爆头。
+浏览器里玩的 CS 风格 FPS。请在**你自己的电脑**上启动，不要打开云端或聊天里的 `localhost:5173`——那是远程机器的地址，你的浏览器打不开。
 
-## 运行
+## 在你电脑上玩
+
+需要先安装 [Node.js](https://nodejs.org/)（LTS 即可），然后在终端执行：
 
 ```bash
+git clone -b cursor/cs-style-fps-game-63c1 https://github.com/zuiaikeai1985-design/musical-garbanzo.git
+cd musical-garbanzo
 npm install
 npm run dev
 ```
 
-打开终端里提示的本地地址（默认 `http://localhost:5173`），点选阵营后单击画面锁定鼠标。
+终端会出现一行 **Local: http://localhost:5173/**，用 Chrome 或 Edge 打开**这一行**的地址。
+
+点 **恐怖分子** 或 **反恐精英**，再单击游戏画面锁定鼠标。按 `Esc` 解锁。
+
+如果已经克隆过仓库：
 
 ```bash
-npm test      # 伤害 / 碰撞 / 武器 / 寻路单测
-npm run build # 类型检查 + 生产构建
+git fetch origin
+git checkout cursor/cs-style-fps-game-63c1
+git pull origin cursor/cs-style-fps-game-63c1
+npm install
+npm run dev
 ```
+
+不要用 `main` 分支，那个还是旧的 Remotion 模板，不是这款游戏。
 
 ## 操作
 
@@ -30,14 +43,4 @@ npm run build # 类型检查 + 生产构建
 | Tab | 计分板 |
 | Esc | 暂停 |
 
-## 玩法
-
-- 先到 **20 击杀** 的一方获胜，或 10 分钟后按总分结算
-- 开局 $3500，击杀 +$300，每 45 秒发一次生存津贴
-- 购买：AK-47、M4A4、AWP、Desert Eagle、USP-S、Glock-18、护甲+头盔
-- 爆头、护甲穿透、移动/跳跃散布、蹲下更准
-- 雷达显示队友、敌人、A/B 包点
-
-## 技术
-
-Vite + TypeScript + Three.js。地图、人机、枪声和准星 HUD 都在浏览器里即时生成，不依赖额外素材包。
+手机或微信内置浏览器玩不了，请用电脑。
