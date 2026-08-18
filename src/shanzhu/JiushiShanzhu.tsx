@@ -7,12 +7,10 @@ import {
   MountainSilhouette,
   Vignette,
 } from "./components/Atmosphere";
-import { Cradle } from "./scenes/Cradle";
-import { Depart } from "./scenes/Depart";
-import { Finale } from "./scenes/Finale";
-import { LotusAwaken } from "./scenes/Opening";
-import { PathWalk } from "./scenes/PathWalk";
-import { Temples } from "./scenes/Temples";
+import { FewPeople } from "./scenes/Depart";
+import { LogoReturn } from "./scenes/Finale";
+import { LogoOpen } from "./scenes/Opening";
+import { MorePeople } from "./scenes/PathWalk";
 import { palette, SCENE, START } from "./theme";
 
 export const JiushiShanzhu: React.FC = () => {
@@ -21,27 +19,21 @@ export const JiushiShanzhu: React.FC = () => {
       <MistGround />
       <MountainSilhouette />
       <GoldDust />
-      <Sequence from={START.lotus} durationInFrames={SCENE.lotus} name="Lotus">
-        <LotusAwaken />
+      <Sequence from={START.logo} durationInFrames={SCENE.logo} name="1-Logo">
+        <LogoOpen />
       </Sequence>
-      <Sequence from={START.depart} durationInFrames={SCENE.depart} name="Depart">
-        <Depart />
+      <Sequence from={START.few} durationInFrames={SCENE.few} name="2-Few">
+        <FewPeople />
       </Sequence>
-      <Sequence from={START.path} durationInFrames={SCENE.path} name="Path">
-        <PathWalk />
+      <Sequence from={START.many} durationInFrames={SCENE.many} name="3-Many">
+        <MorePeople />
       </Sequence>
       <Sequence
-        from={START.temples}
-        durationInFrames={SCENE.temples}
-        name="Temples"
+        from={START.returnLogo}
+        durationInFrames={SCENE.returnLogo}
+        name="4-ReturnLogo"
       >
-        <Temples />
-      </Sequence>
-      <Sequence from={START.cradle} durationInFrames={SCENE.cradle} name="Cradle">
-        <Cradle />
-      </Sequence>
-      <Sequence from={START.finale} durationInFrames={SCENE.finale} name="Finale">
-        <Finale />
+        <LogoReturn />
       </Sequence>
       <Vignette />
       <FilmGrain />

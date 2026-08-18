@@ -5,65 +5,61 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { Lotus } from "../components/Bead";
-import { brushFamily, serifFamily, titleFamily } from "../fonts";
+import { BrandLogo } from "../components/Bead";
+import { serifFamily, titleFamily } from "../fonts";
 import { clamp, fadeWindow } from "../motion";
 import { copy, palette, SCENE } from "../theme";
 
-export const LotusAwaken: React.FC = () => {
+/** Act 1 — Logo 起：一切从这一念开始 */
+export const LogoOpen: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const opacity = fadeWindow(frame, SCENE.lotus, 14, 18);
-  const open = interpolate(frame, [10, 90], [0.15, 1], clamp);
-  const titleIn = interpolate(frame, [70, 110], [0, 1], clamp);
-  const titleY = interpolate(frame, [70, 120], [20, 0], clamp);
-  const verticalIn = interpolate(frame, [40, 80], [0, 1], clamp);
-  const pulse = 1 + Math.sin(frame / (fps * 1.3)) * 0.02;
+  const opacity = fadeWindow(frame, SCENE.logo, 12, 20);
+  const open = interpolate(frame, [8, 70], [0.2, 1], clamp);
+  const scale = interpolate(frame, [0, 80], [0.82, 1], clamp);
+  const brandIn = interpolate(frame, [50, 90], [0, 1], clamp);
+  const enIn = interpolate(frame, [80, 120], [0, 1], clamp);
+  const pulse = 1 + Math.sin(frame / (fps * 1.4)) * 0.015;
 
   return (
     <AbsoluteFill style={{ opacity }}>
       <div
         style={{
           position: "absolute",
-          left: 96,
-          top: 160,
-          writingMode: "vertical-rl",
-          fontFamily: brushFamily,
-          fontSize: 40,
-          letterSpacing: 16,
-          color: palette.gold,
-          opacity: verticalIn * 0.9,
+          left: "50%",
+          top: "38%",
+          width: 520,
+          height: 520,
+          transform: "translate(-50%, -50%)",
+          background: `radial-gradient(circle, ${palette.gold}44 0%, transparent 65%)`,
+          opacity: open,
         }}
-      >
-        {copy.vertical}
-      </div>
+      />
       <AbsoluteFill
         style={{
           alignItems: "center",
           justifyContent: "center",
-          paddingBottom: 40,
         }}
       >
-        <div style={{ transform: `scale(${pulse})` }}>
-          <Lotus size={460} open={open} />
+        <div style={{ transform: `scale(${scale * pulse})` }}>
+          <BrandLogo size={280} open={open} />
         </div>
         <div
           style={{
             marginTop: 28,
-            opacity: titleIn,
-            transform: `translateY(${titleY}px)`,
             textAlign: "center",
+            opacity: brandIn,
           }}
         >
           <div
             style={{
               fontFamily: titleFamily,
-              fontSize: 108,
+              fontSize: 72,
               color: palette.cream,
-              letterSpacing: 36,
+              letterSpacing: 28,
             }}
           >
-            {copy.filmTitle}
+            {copy.brand}
           </div>
           <div
             style={{
@@ -71,8 +67,9 @@ export const LotusAwaken: React.FC = () => {
               fontFamily: serifFamily,
               fontSize: 26,
               color: palette.gold,
-              letterSpacing: 8,
+              letterSpacing: 6,
               fontStyle: "italic",
+              opacity: enIn,
             }}
           >
             {copy.english}

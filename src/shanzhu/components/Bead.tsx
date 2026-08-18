@@ -1,6 +1,63 @@
 import React from "react";
 import { palette } from "../theme";
 
+/** Brand logo: lotus petals + meditating figure + bead heart */
+export const BrandLogo: React.FC<{
+  size?: number;
+  showBead?: boolean;
+  open?: number;
+}> = ({ size = 220, showBead = true, open = 1 }) => {
+  const s = size;
+  return (
+    <svg width={s} height={s} viewBox="0 0 200 200">
+      {/* outer lotus strokes */}
+      {[0, 45, 90, 135, 180, 225, 270, 315].map((deg, i) => {
+        const rad = ((deg - 90) * Math.PI) / 180;
+        const len = 58 + open * 18;
+        const x2 = 100 + Math.cos(rad) * len;
+        const y2 = 100 + Math.sin(rad) * len;
+        return (
+          <path
+            key={i}
+            d={`M100 100 Q ${100 + Math.cos(rad) * 28} ${100 + Math.sin(rad) * 28 - 10} ${x2} ${y2}`}
+            fill="none"
+            stroke={palette.gold}
+            strokeWidth="2.2"
+            opacity={0.55 + open * 0.35}
+          />
+        );
+      })}
+      {/* lotus cup */}
+      <path
+        d="M100 48 C118 68 142 78 142 104 C142 132 122 150 100 162 C78 150 58 132 58 104 C58 78 82 68 100 48 Z"
+        fill="none"
+        stroke={palette.gold}
+        strokeWidth="2.6"
+      />
+      {/* meditating figure */}
+      <path
+        d="M100 78 C112 88 118 100 118 112 C118 128 110 138 100 144 C90 138 82 128 82 112 C82 100 88 88 100 78 Z"
+        fill="none"
+        stroke={palette.goldBright}
+        strokeWidth="2"
+      />
+      <circle cx="100" cy="96" r="4.5" fill={palette.goldBright} />
+      {showBead ? (
+        <circle
+          cx="100"
+          cy="118"
+          r="7"
+          fill={palette.goldBright}
+          opacity="0.95"
+          style={{
+            filter: `drop-shadow(0 0 10px ${palette.gold})`,
+          }}
+        />
+      ) : null}
+    </svg>
+  );
+};
+
 export const Bead: React.FC<{
   size: number;
   glow?: number;
@@ -19,70 +76,5 @@ export const Bead: React.FC<{
         `,
       }}
     />
-  );
-};
-
-export const Lotus: React.FC<{
-  size?: number;
-  open?: number;
-}> = ({ size = 420, open = 1 }) => {
-  const petals = 8;
-  return (
-    <div style={{ width: size, height: size, position: "relative" }}>
-      {Array.from({ length: petals }).map((_, i) => {
-        const angle = (i / petals) * 360;
-        const spread = 28 + open * 38;
-        return (
-          <div
-            key={i}
-            style={{
-              position: "absolute",
-              left: "50%",
-              top: "50%",
-              width: size * 0.18,
-              height: size * 0.42,
-              marginLeft: -(size * 0.09),
-              marginTop: -(size * 0.36),
-              borderRadius: "50% 50% 45% 45%",
-              background: `linear-gradient(180deg, ${palette.goldBright} 0%, ${palette.lotus} 55%, ${palette.goldDeep} 100%)`,
-              opacity: 0.55 + open * 0.35,
-              transform: `rotate(${angle}deg) translateY(${-spread}px)`,
-              transformOrigin: "50% 100%",
-              boxShadow: `0 0 24px ${palette.gold}55`,
-            }}
-          />
-        );
-      })}
-      <div
-        style={{
-          position: "absolute",
-          left: "50%",
-          top: "52%",
-          transform: "translate(-50%, -50%)",
-        }}
-      >
-        <Bead size={size * 0.16} glow={0.75} />
-      </div>
-    </div>
-  );
-};
-
-export const LogoMark: React.FC<{ size?: number }> = ({ size = 120 }) => {
-  return (
-    <svg width={size} height={size} viewBox="0 0 120 120">
-      <path
-        d="M60 18 C72 34 92 42 92 62 C92 82 76 96 60 104 C44 96 28 82 28 62 C28 42 48 34 60 18 Z"
-        fill="none"
-        stroke={palette.gold}
-        strokeWidth="2.5"
-      />
-      <path
-        d="M60 40 C68 48 74 56 74 66 C74 78 68 86 60 90 C52 86 46 78 46 66 C46 56 52 48 60 40 Z"
-        fill="none"
-        stroke={palette.goldBright}
-        strokeWidth="2"
-      />
-      <circle cx="60" cy="58" r="5" fill={palette.goldBright} />
-    </svg>
   );
 };

@@ -13,9 +13,11 @@ Welcome to your Remotion project.
 
 ## 九世善珠 · 《守爱》
 
-一分钟品宣合成 `JiushiShanzhu`：金莲启珠 → 金刚兄弟出山 → 光径百寺 → 捧珠守爱 → 品牌落版。
+一分钟品宣合成 `JiushiShanzhu`，叙事闭环：
 
-完整概念与分镜见 [`docs/jiushi-shanzhu-animation-script.md`](docs/jiushi-shanzhu-animation-script.md)。
+**Logo → 一群人 → 更多人 → 回归 Logo**
+
+完整讲稿见 [`docs/jiushi-shanzhu-animation-script.md`](docs/jiushi-shanzhu-animation-script.md)。
 
 ```console
 npm run dev

@@ -2,36 +2,25 @@ export const FPS = 30;
 export const WIDTH = 1920;
 export const HEIGHT = 1080;
 
-/** 60-second 《守爱》 brand film */
+/**
+ * 《守爱》60s — Logo 闭环
+ * 1 Logo 起 → 2 一群人 → 3 更多人 → 4 回归 Logo
+ */
 export const SCENE = {
-  lotus: 8 * FPS,
-  depart: 8 * FPS,
-  path: 12 * FPS,
-  temples: 12 * FPS,
-  cradle: 8 * FPS,
-  finale: 12 * FPS,
+  logo: 10 * FPS,
+  few: 15 * FPS,
+  many: 20 * FPS,
+  returnLogo: 15 * FPS,
 } as const;
 
 export const DURATION_IN_FRAMES =
-  SCENE.lotus +
-  SCENE.depart +
-  SCENE.path +
-  SCENE.temples +
-  SCENE.cradle +
-  SCENE.finale;
+  SCENE.logo + SCENE.few + SCENE.many + SCENE.returnLogo;
 
 export const START = {
-  lotus: 0,
-  depart: SCENE.lotus,
-  path: SCENE.lotus + SCENE.depart,
-  temples: SCENE.lotus + SCENE.depart + SCENE.path,
-  cradle: SCENE.lotus + SCENE.depart + SCENE.path + SCENE.temples,
-  finale:
-    SCENE.lotus +
-    SCENE.depart +
-    SCENE.path +
-    SCENE.temples +
-    SCENE.cradle,
+  logo: 0,
+  few: SCENE.logo,
+  many: SCENE.logo + SCENE.few,
+  returnLogo: SCENE.logo + SCENE.few + SCENE.many,
 } as const;
 
 export const palette = {
@@ -52,12 +41,10 @@ export const copy = {
   english: "guard the love",
   brand: "九世善珠",
   slogan: "为爱付出，护佑一生",
-  vertical: "为爱付出",
-  brothers: "金刚兄弟",
-  pilgrimage: "百寺行",
-  shousui: "守岁计划",
-  ask: "有人问，爱要怎么守？",
-  walk: "把它走成路。",
-  cradle: "为爱付出，护佑一生。",
+  fewLine: "先是一群人。",
+  fewSub: "金刚兄弟 · 同行一念",
+  manyLine: "然后，是更多人。",
+  manySub: "百寺行 · 守岁计划",
+  returnLine: "爱走出去，仍回到这一念。",
   lockup: "金刚兄弟 · 百寺行",
 };
