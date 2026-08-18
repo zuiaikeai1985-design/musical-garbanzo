@@ -11,9 +11,11 @@
 
 Welcome to your Remotion project.
 
-## 九世善珠 · 《九世一念》
+## 九世善珠 · 《守爱》
 
-新国风品牌动画合成 `JiushiShanzhu`：一颗善珠穿越九世，落回母亲掌心。完整分镜、旁白与风格宪章见 [`docs/jiushi-shanzhu-animation-script.md`](docs/jiushi-shanzhu-animation-script.md)。
+一分钟品宣合成 `JiushiShanzhu`：金莲启珠 → 金刚兄弟出山 → 光径百寺 → 捧珠守爱 → 品牌落版。
+
+完整概念与分镜见 [`docs/jiushi-shanzhu-animation-script.md`](docs/jiushi-shanzhu-animation-script.md)。
 
 ```console
 npm run dev

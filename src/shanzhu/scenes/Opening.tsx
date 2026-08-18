@@ -5,71 +5,52 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { Bead } from "../components/Bead";
+import { Lotus } from "../components/Bead";
 import { brushFamily, serifFamily, titleFamily } from "../fonts";
 import { clamp, fadeWindow } from "../motion";
-import { palette, SCENE } from "../theme";
+import { copy, palette, SCENE } from "../theme";
 
-export const Opening: React.FC = () => {
+export const LotusAwaken: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const opacity = fadeWindow(frame, SCENE.opening, 16, 22);
-  const beadY = interpolate(frame, [12, 78], [-220, 0], clamp);
-  const beadScale = interpolate(frame, [12, 90], [0.55, 1], clamp);
-  const titleOpacity = interpolate(frame, [72, 110], [0, 1], clamp);
-  const titleY = interpolate(frame, [72, 120], [24, 0], clamp);
-  const subOpacity = interpolate(frame, [118, 156], [0, 1], clamp);
-  const voOpacity = interpolate(frame, [150, 188], [0, 1], clamp);
-  const glow = interpolate(frame, [0, 80], [0.15, 0.7], clamp);
-  const pulse = 1 + Math.sin(frame / fps) * 0.015;
+  const opacity = fadeWindow(frame, SCENE.lotus, 14, 18);
+  const open = interpolate(frame, [10, 90], [0.15, 1], clamp);
+  const titleIn = interpolate(frame, [70, 110], [0, 1], clamp);
+  const titleY = interpolate(frame, [70, 120], [20, 0], clamp);
+  const verticalIn = interpolate(frame, [40, 80], [0, 1], clamp);
+  const pulse = 1 + Math.sin(frame / (fps * 1.3)) * 0.02;
 
   return (
     <AbsoluteFill style={{ opacity }}>
       <div
         style={{
           position: "absolute",
-          left: "50%",
-          top: "38%",
-          width: 720,
-          height: 720,
-          transform: "translate(-50%, -50%)",
-          background: `radial-gradient(circle, ${palette.gold}33 0%, transparent 62%)`,
-          opacity: glow,
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
           left: 96,
-          top: 140,
+          top: 160,
           writingMode: "vertical-rl",
           fontFamily: brushFamily,
-          fontSize: 42,
-          letterSpacing: 18,
+          fontSize: 40,
+          letterSpacing: 16,
           color: palette.gold,
-          opacity: titleOpacity * 0.8,
+          opacity: verticalIn * 0.9,
         }}
       >
-        一念为善
+        {copy.vertical}
       </div>
       <AbsoluteFill
         style={{
           alignItems: "center",
           justifyContent: "center",
-          paddingTop: 20,
+          paddingBottom: 40,
         }}
       >
-        <div
-          style={{
-            transform: `translateY(${beadY}px) scale(${beadScale * pulse})`,
-          }}
-        >
-          <Bead size={168} glow={glow} />
+        <div style={{ transform: `scale(${pulse})` }}>
+          <Lotus size={460} open={open} />
         </div>
         <div
           style={{
-            marginTop: 48,
-            opacity: titleOpacity,
+            marginTop: 28,
+            opacity: titleIn,
             transform: `translateY(${titleY}px)`,
             textAlign: "center",
           }}
@@ -78,36 +59,23 @@ export const Opening: React.FC = () => {
             style={{
               fontFamily: titleFamily,
               fontSize: 108,
-              color: palette.paper,
-              letterSpacing: 28,
+              color: palette.cream,
+              letterSpacing: 36,
             }}
           >
-            九世一念
+            {copy.filmTitle}
           </div>
           <div
             style={{
-              marginTop: 18,
+              marginTop: 16,
               fontFamily: serifFamily,
-              fontSize: 28,
+              fontSize: 26,
               color: palette.gold,
-              letterSpacing: 14,
-              opacity: subOpacity,
+              letterSpacing: 8,
+              fontStyle: "italic",
             }}
           >
-            一珠为念 · 九世为善
-          </div>
-          <div
-            style={{
-              marginTop: 28,
-              fontFamily: serifFamily,
-              fontWeight: 300,
-              fontSize: 24,
-              color: palette.paper,
-              letterSpacing: 6,
-              opacity: voOpacity,
-            }}
-          >
-            一颗善珠，穿越九世，始终落回母亲掌心
+            {copy.english}
           </div>
         </div>
       </AbsoluteFill>

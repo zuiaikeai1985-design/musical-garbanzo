@@ -1,231 +1,171 @@
 import React from "react";
-import { MotifId, palette } from "../theme";
+import { palette } from "../theme";
 
-const stroke = palette.gold;
+export const BrotherSilhouettes: React.FC<{
+  count?: number;
+  scale?: number;
+}> = ({ count = 3, scale = 1 }) => {
+  const figures = Array.from({ length: count }).map((_, i) => {
+    const x = i * 70 - ((count - 1) * 70) / 2;
+    const h = 140 + (i % 2) * 16;
+    return { x, h, staff: i === Math.floor(count / 2) };
+  });
 
-export const Motif: React.FC<{ id: MotifId; color: string }> = ({
-  id,
-  color,
-}) => {
-  switch (id) {
-    case "dew":
-      return (
-        <svg viewBox="0 0 320 320" width={420} height={420}>
+  return (
+    <svg
+      width={520 * scale}
+      height={220 * scale}
+      viewBox="-220 -20 440 240"
+      style={{ overflow: "visible" }}
+    >
+      {figures.map((f, i) => (
+        <g key={i} transform={`translate(${f.x}, 0)`}>
+          <circle cx="0" cy="18" r="14" fill="#02080c" />
           <path
-            d="M160 46 C168 92 214 128 214 176 A54 54 0 1 1 106 176 C106 128 152 92 160 46 Z"
-            fill="none"
-            stroke={color}
-            strokeWidth="3"
+            d={`M0 32 C-28 48 -34 90 -30 ${f.h} L30 ${f.h} C34 90 28 48 0 32 Z`}
+            fill="#02080c"
           />
-          <ellipse
-            cx="148"
-            cy="168"
-            rx="10"
-            ry="16"
-            fill={palette.goldBright}
+          {f.staff ? (
+            <line
+              x1="22"
+              y1="40"
+              x2="38"
+              y2={f.h + 10}
+              stroke={palette.gold}
+              strokeWidth="2"
+              opacity="0.65"
+            />
+          ) : null}
+        </g>
+      ))}
+    </svg>
+  );
+};
+
+export const LightPath: React.FC<{ progress: number }> = ({ progress }) => {
+  const dash = 1800;
+  const offset = dash * (1 - progress);
+
+  return (
+    <svg
+      width="100%"
+      height="100%"
+      viewBox="0 0 1920 1080"
+      preserveAspectRatio="xMidYMid slice"
+      style={{ position: "absolute", inset: 0 }}
+    >
+      <defs>
+        <linearGradient id="pathGlow" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor={palette.gold} stopOpacity="0.1" />
+          <stop offset="50%" stopColor={palette.goldBright} stopOpacity="0.95" />
+          <stop offset="100%" stopColor={palette.gold} stopOpacity="0.2" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M80 820 C320 760 420 700 560 650 C760 570 860 540 1040 500 C1240 450 1420 420 1840 360"
+        fill="none"
+        stroke="url(#pathGlow)"
+        strokeWidth="10"
+        strokeLinecap="round"
+        strokeDasharray={dash}
+        strokeDashoffset={offset}
+        filter="drop-shadow(0 0 12px rgba(240,197,106,0.65))"
+      />
+      <path
+        d="M80 820 C320 760 420 700 560 650 C760 570 860 540 1040 500 C1240 450 1420 420 1840 360"
+        fill="none"
+        stroke={palette.goldBright}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeDasharray={dash}
+        strokeDashoffset={offset}
+        opacity="0.9"
+      />
+    </svg>
+  );
+};
+
+export const TempleLights: React.FC<{ lit: number }> = ({ lit }) => {
+  const nodes = [
+    { x: 320, y: 420, h: 120 },
+    { x: 560, y: 360, h: 160 },
+    { x: 820, y: 300, h: 200 },
+    { x: 1080, y: 340, h: 150 },
+    { x: 1320, y: 280, h: 180 },
+    { x: 1580, y: 360, h: 140 },
+    { x: 960, y: 480, h: 90 },
+  ];
+
+  return (
+    <svg
+      width="100%"
+      height="100%"
+      viewBox="0 0 1920 1080"
+      style={{ position: "absolute", inset: 0 }}
+    >
+      {nodes.map((n, i) => {
+        const on = i < lit;
+        return (
+          <g key={i} opacity={on ? 1 : 0.15}>
+            <rect
+              x={n.x - 18}
+              y={n.y}
+              width="36"
+              height={n.h}
+              fill={palette.gold}
+              opacity={0.35}
+            />
+            <polygon
+              points={`${n.x},${n.y - 28} ${n.x - 34},${n.y + 8} ${n.x + 34},${n.y + 8}`}
+              fill={palette.goldBright}
+              opacity={0.7}
+            />
+            <circle
+              cx={n.x}
+              cy={n.y + n.h * 0.35}
+              r="8"
+              fill={palette.goldBright}
+              opacity={on ? 1 : 0.2}
+            />
+          </g>
+        );
+      })}
+      {nodes.slice(0, Math.max(lit - 1, 0)).map((n, i) => {
+        const next = nodes[i + 1];
+        if (!next) return null;
+        return (
+          <line
+            key={`l-${i}`}
+            x1={n.x}
+            y1={n.y + 20}
+            x2={next.x}
+            y2={next.y + 20}
+            stroke={palette.gold}
+            strokeWidth="1.5"
             opacity="0.55"
           />
-          <path
-            d="M70 250 C110 220 210 220 250 250"
-            fill="none"
-            stroke={stroke}
-            strokeWidth="1.5"
-            opacity="0.6"
-          />
-        </svg>
-      );
-    case "jade":
-      return (
-        <svg viewBox="0 0 320 320" width={420} height={420}>
-          <circle
-            cx="160"
-            cy="160"
-            r="86"
-            fill="none"
-            stroke={color}
-            strokeWidth="10"
-          />
-          <circle
-            cx="160"
-            cy="160"
-            r="28"
-            fill="none"
-            stroke={stroke}
-            strokeWidth="3"
-          />
-          <circle cx="160" cy="74" r="4" fill={stroke} />
-          <circle cx="160" cy="246" r="4" fill={stroke} />
-          <circle cx="74" cy="160" r="4" fill={stroke} />
-          <circle cx="246" cy="160" r="4" fill={stroke} />
-        </svg>
-      );
-    case "silkroad":
-      return (
-        <svg viewBox="0 0 320 320" width={420} height={420}>
-          <path
-            d="M20 230 C80 190 120 250 180 210 C230 178 270 220 310 196"
-            fill="none"
-            stroke={color}
-            strokeWidth="3"
-          />
-          <path
-            d="M20 258 C90 230 140 270 210 236 C250 218 280 250 310 234"
-            fill="none"
-            stroke={stroke}
-            strokeWidth="1.5"
-            opacity="0.7"
-          />
-          <circle cx="230" cy="88" r="22" fill="none" stroke={stroke} strokeWidth="2" />
-          <circle cx="86" cy="120" r="3" fill={palette.goldBright} />
-          <circle cx="118" cy="96" r="2" fill={palette.goldBright} />
-          <circle cx="154" cy="128" r="2" fill={palette.goldBright} />
-        </svg>
-      );
-    case "trousseau":
-      return (
-        <svg viewBox="0 0 320 320" width={420} height={420}>
-          <path
-            d="M160 70 C176 110 220 126 160 168 C100 126 144 110 160 70 Z"
-            fill="none"
-            stroke={color}
-            strokeWidth="3"
-          />
-          <path
-            d="M160 168 C176 208 220 224 160 266 C100 224 144 208 160 168 Z"
-            fill="none"
-            stroke={color}
-            strokeWidth="3"
-          />
-          <path
-            d="M70 168 C110 152 126 108 168 168 C126 228 110 184 70 168 Z"
-            fill="none"
-            stroke={stroke}
-            strokeWidth="2"
-          />
-          <path
-            d="M250 168 C210 152 194 108 152 168 C194 228 210 184 250 168 Z"
-            fill="none"
-            stroke={stroke}
-            strokeWidth="2"
-          />
-        </svg>
-      );
-    case "rain":
-      return (
-        <svg viewBox="0 0 320 320" width={420} height={420}>
-          <path
-            d="M160 70 C210 70 250 108 250 150 C210 150 180 168 160 196 C140 168 110 150 70 150 C70 108 110 70 160 70 Z"
-            fill="none"
-            stroke={color}
-            strokeWidth="3"
-          />
-          <line x1="160" y1="196" x2="160" y2="250" stroke={stroke} strokeWidth="2" />
-          <line x1="92" y1="214" x2="80" y2="246" stroke={color} strokeWidth="1.5" />
-          <line x1="124" y1="226" x2="114" y2="258" stroke={color} strokeWidth="1.5" />
-          <line x1="196" y1="226" x2="206" y2="258" stroke={color} strokeWidth="1.5" />
-          <line x1="228" y1="214" x2="240" y2="246" stroke={color} strokeWidth="1.5" />
-        </svg>
-      );
-    case "token":
-      return (
-        <svg viewBox="0 0 320 320" width={420} height={420}>
-          <path
-            d="M110 96 C150 70 186 96 186 138 C186 176 150 196 128 220"
-            fill="none"
-            stroke={color}
-            strokeWidth="4"
-            strokeLinecap="round"
-          />
-          <path
-            d="M210 224 C170 250 134 224 134 182 C134 144 170 124 192 100"
-            fill="none"
-            stroke={stroke}
-            strokeWidth="3"
-            strokeLinecap="round"
-          />
-          <circle cx="160" cy="160" r="8" fill={palette.goldBright} />
-        </svg>
-      );
-    case "ocean":
-      return (
-        <svg viewBox="0 0 320 320" width={420} height={420}>
-          <rect
-            x="88"
-            y="86"
-            width="144"
-            height="96"
-            rx="6"
-            fill="none"
-            stroke={color}
-            strokeWidth="3"
-          />
-          <path
-            d="M88 92 L160 142 L232 92"
-            fill="none"
-            stroke={stroke}
-            strokeWidth="2"
-          />
-          <path
-            d="M40 230 C80 210 110 250 160 228 C210 206 240 246 280 224"
-            fill="none"
-            stroke={color}
-            strokeWidth="2"
-          />
-          <path
-            d="M40 256 C90 236 120 276 170 254 C220 232 250 270 280 250"
-            fill="none"
-            stroke={stroke}
-            strokeWidth="1.5"
-            opacity="0.75"
-          />
-        </svg>
-      );
-    case "lamp":
-      return (
-        <svg viewBox="0 0 320 320" width={420} height={420}>
-          <rect
-            x="96"
-            y="70"
-            width="128"
-            height="168"
-            fill="none"
-            stroke={color}
-            strokeWidth="3"
-          />
-          <line x1="160" y1="70" x2="160" y2="238" stroke={stroke} strokeWidth="1.5" />
-          <line x1="96" y1="126" x2="224" y2="126" stroke={stroke} strokeWidth="1.5" />
-          <line x1="96" y1="182" x2="224" y2="182" stroke={stroke} strokeWidth="1.5" />
-          <rect
-            x="132"
-            y="142"
-            width="56"
-            height="32"
-            fill={palette.goldBright}
-            opacity="0.35"
-          />
-        </svg>
-      );
-    case "palms":
-      return (
-        <svg viewBox="0 0 320 320" width={420} height={420}>
-          <path
-            d="M70 190 C90 140 140 120 160 168 C180 120 230 140 250 190 C230 236 190 256 160 236 C130 256 90 236 70 190 Z"
-            fill="none"
-            stroke={color}
-            strokeWidth="3"
-          />
-          <circle
-            cx="160"
-            cy="176"
-            r="22"
-            fill="none"
-            stroke={stroke}
-            strokeWidth="3"
-          />
-          <circle cx="160" cy="176" r="6" fill={palette.goldBright} />
-        </svg>
-      );
-    default:
-      return null;
-  }
+        );
+      })}
+    </svg>
+  );
+};
+
+export const HandsCradle: React.FC = () => {
+  return (
+    <svg width={520} height={360} viewBox="0 0 520 360">
+      <path
+        d="M70 220 C110 150 180 130 240 180 C260 120 340 110 390 170 C430 210 450 260 420 300 C360 340 250 350 180 330 C120 310 70 270 70 220 Z"
+        fill="none"
+        stroke={palette.gold}
+        strokeWidth="3"
+      />
+      <path
+        d="M120 250 C160 210 210 200 250 230 C280 200 340 205 370 245"
+        fill="none"
+        stroke={palette.goldBright}
+        strokeWidth="2"
+        opacity="0.7"
+      />
+    </svg>
+  );
 };
