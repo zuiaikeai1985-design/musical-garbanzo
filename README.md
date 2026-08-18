@@ -9,7 +9,16 @@
   </a>
 </p>
 
-Welcome to your Remotion project!
+Welcome to your Remotion project.
+
+## 九世善珠 · 《九世一念》
+
+新国风品牌动画合成 `JiushiShanzhu`：一颗善珠穿越九世，落回母亲掌心。完整分镜、旁白与风格宪章见 [`docs/jiushi-shanzhu-animation-script.md`](docs/jiushi-shanzhu-animation-script.md)。
+
+```console
+npm run dev
+npm run render:shanzhu
+```
 
 ## Commands
 

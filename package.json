@@ -31,7 +31,8 @@
     "dev": "remotion studio",
     "build": "remotion bundle",
     "upgrade": "remotion upgrade",
-    "lint": "tsc && eslint src"
+    "lint": "tsc && eslint src",
+    "render:shanzhu": "remotion render JiushiShanzhu out/jiushi-shanzhu.mp4"
   },
   "private": true
 }
