@@ -1,6 +1,6 @@
 ---
 name: viral-growth
-description: Viral marketing playbook for any product. MUST use when the user says 病毒策划, 病毒式营销, 爆款玩法, 传播策划, 裂变, 游戏化获客, 积分碰撞, 短视频现象, 话题暴炸, UGC共创, 社群裂变, or brings a product plus existing advantages (resources, content, people, channels, story, customers) and wants ready-to-run viral / fission / challenge / ranking / short-video phenomenon plays. Do not use for generic copywriting, product roadmaps, legal review, or coding unless they ask for viral campaign ideas.
+description: 用户说「病毒营销」时必须使用。也用于病毒策划、病毒式营销、爆款玩法、传播策划、裂变、游戏化获客、积分碰撞、短视频现象、话题暴炸、UGC共创、社群裂变，或用户拿出产品加既有优势要现成传播玩法。Also match: viral marketing, fission, ranking, short-video phenomenon. 不要用于普通文案、产品规划、法务或纯写代码。
 icon: rocket
 color: orange
 ---
@@ -13,11 +13,13 @@ color: orange
 
 这条 Skill 通用，不绑定任何品牌、品类或仓库里的某个项目。用户说的是什么产品，就给什么产品做。
 
+对话里直接说「病毒营销」或打 `/viral-growth`。
+
 ## 何时必须用
 
 出现下面任一情况，立刻按本 Skill 走，不要先去改代码或空写品牌文案：
 
-- 用户说：病毒策划、病毒式营销、爆款玩法、传播策划、裂变、游戏化获客、积分碰撞、短视频现象、话题暴炸、UGC、社群裂变
+- 用户说：病毒营销、病毒策划、病毒式营销、爆款玩法、传播策划、裂变、游戏化获客、积分碰撞、短视频现象、话题暴炸、UGC、社群裂变
 - 用户拿出「产品是什么 + 现在手里有什么优势」，要现成玩法、传播方案、获客活动
 - 用户要的是「会被人转、会被人玩、会自己长」的增长，而不是普通投放计划
 
