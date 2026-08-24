@@ -30,6 +30,7 @@
   "scripts": {
     "dev": "remotion studio",
     "build": "remotion bundle",
+    "render:plan2026": "remotion render ChuanDeng2026 out/chuandeng-2026.mp4",
     "upgrade": "remotion upgrade",
     "lint": "tsc && eslint src"
   },
