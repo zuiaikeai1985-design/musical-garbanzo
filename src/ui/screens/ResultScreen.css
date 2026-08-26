@@ -1,0 +1,134 @@
+.result-root {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 20;
+  background: rgba(3, 4, 6, 0.82);
+  animation: result-fade 400ms ease-out;
+}
+
+@keyframes result-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+.result-panel {
+  width: min(460px, 88%);
+  padding: 24px 28px 26px;
+  text-align: center;
+  background: linear-gradient(180deg, #33291f 0%, #241c15 40%, #1a140f 100%);
+  border: 3px solid #0c0806;
+  box-shadow:
+    inset 2px 2px 0 #6b5744,
+    inset -2px -2px 0 #0c0806,
+    0 24px 70px rgba(0, 0, 0, 0.8);
+}
+
+.result-title {
+  margin: 0 0 20px;
+  font-family: var(--font-ui);
+  font-size: 18px;
+  letter-spacing: 0.16em;
+}
+
+html[data-lang="zh"] .result-title {
+  font-size: 28px;
+  letter-spacing: 0.3em;
+}
+
+.is-victory .result-title {
+  color: #6cf07a;
+  text-shadow:
+    0 0 14px rgba(53, 194, 58, 0.7),
+    2px 2px 0 #0d3a12;
+}
+
+.is-defeat .result-title {
+  color: #ff5a44;
+  text-shadow:
+    0 0 14px rgba(255, 60, 40, 0.7),
+    2px 2px 0 #4a0d0a;
+}
+
+.result-stats {
+  margin-bottom: 20px;
+  padding: 10px 12px;
+  background: #12100c;
+  border: 2px solid #0c0806;
+  box-shadow: inset 1px 1px 0 #3a2e24;
+}
+
+.result-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.result-row + .result-row {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.result-label {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--ra-text-dim);
+}
+
+.result-value {
+  font-size: 11px;
+  color: var(--ra-amber);
+}
+
+html[data-lang="zh"] .result-label {
+  font-size: 12px;
+}
+
+html[data-lang="zh"] .result-value {
+  font-size: 14px;
+}
+
+.result-row.is-score {
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 2px solid #6b5744;
+}
+
+.result-row.is-score .result-value {
+  font-size: 15px;
+  color: #ffe9c9;
+}
+
+html[data-lang="zh"] .result-row.is-score .result-value {
+  font-size: 19px;
+}
+
+.result-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.result-button {
+  flex: 1 1 0;
+  padding: 13px 8px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: #ffe9c9;
+  background: linear-gradient(180deg, #c0242a 0%, #7d1418 100%);
+  border: 2px solid #0c0806;
+  box-shadow:
+    inset 1px 1px 0 #ff6a5a,
+    inset -1px -1px 0 #3d0a0c;
+}
+
+.result-button:hover {
+  background: linear-gradient(180deg, #e03038 0%, #96181d 100%);
+}
+
+html[data-lang="zh"] .result-button {
+  font-size: 14px;
+}

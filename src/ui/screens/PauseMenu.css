@@ -1,0 +1,69 @@
+.pause-root {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  background: rgba(3, 4, 6, 0.72);
+}
+
+.pause-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(320px, 80%);
+  padding: 22px 24px 24px;
+  background: linear-gradient(180deg, #33291f 0%, #241c15 40%, #1a140f 100%);
+  border: 3px solid #0c0806;
+  box-shadow:
+    inset 2px 2px 0 #6b5744,
+    inset -2px -2px 0 #0c0806,
+    0 22px 60px rgba(0, 0, 0, 0.75);
+}
+
+.pause-title {
+  margin: 0 0 10px;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  letter-spacing: 0.22em;
+  text-align: center;
+  color: #ff5a44;
+}
+
+html[data-lang="zh"] .pause-title {
+  font-size: 20px;
+  letter-spacing: 0.35em;
+}
+
+.pause-button {
+  padding: 12px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--ra-text);
+  background: linear-gradient(180deg, #574636 0%, #3a2e24 100%);
+  border: 2px solid #0c0806;
+  box-shadow:
+    inset 1px 1px 0 #8d7c68,
+    inset -1px -1px 0 #1a140f;
+}
+
+html[data-lang="zh"] .pause-button {
+  font-size: 14px;
+}
+
+.pause-button:hover {
+  background: linear-gradient(180deg, #6b5744 0%, #48392c 100%);
+}
+
+.pause-button--danger {
+  color: #ffe9c9;
+  background: linear-gradient(180deg, #c0242a 0%, #7d1418 100%);
+  box-shadow:
+    inset 1px 1px 0 #ff6a5a,
+    inset -1px -1px 0 #3d0a0c;
+}
+
+.pause-button--danger:hover {
+  background: linear-gradient(180deg, #e03038 0%, #96181d 100%);
+}

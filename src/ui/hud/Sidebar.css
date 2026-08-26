@@ -1,0 +1,487 @@
+.sidebar {
+  flex: 0 0 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 6px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #33291f 0%, #241c15 40%, #1a140f 100%);
+  border-left: 3px solid #0c0806;
+  box-shadow: inset 2px 0 0 #6b5744;
+}
+
+.sidebar-top {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ── Radar ───────────────────────────────────────────────────────────────── */
+
+.radar-frame {
+  position: relative;
+  border: 2px solid #0c0806;
+  box-shadow: inset 1px 1px 0 #3a2e24;
+  background: #07090c;
+}
+
+.radar-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  cursor: crosshair;
+  image-rendering: pixelated;
+}
+
+.radar-frame.is-offline .radar-canvas {
+  filter: grayscale(1) brightness(0.4);
+}
+
+.radar-offline-label {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: #ff6a5a;
+  text-shadow: 0 0 6px rgba(255, 60, 40, 0.8);
+  pointer-events: none;
+}
+
+html[data-lang="zh"] .radar-offline-label {
+  font-size: 14px;
+}
+
+/* ── Readouts ────────────────────────────────────────────────────────────── */
+
+.credits-row,
+.power-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px;
+  background: #14100c;
+  border: 2px solid #0c0806;
+  box-shadow: inset 1px 1px 0 #3a2e24;
+}
+
+.credits-label,
+.power-label {
+  flex: 0 0 auto;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  color: var(--ra-text-dim);
+}
+
+html[data-lang="zh"] .credits-label,
+html[data-lang="zh"] .power-label {
+  font-size: 11px;
+}
+
+.credits-value {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--ra-green);
+  text-shadow: 0 0 6px rgba(53, 194, 58, 0.4);
+}
+
+.power-bar {
+  position: relative;
+  flex: 1 1 auto;
+  height: 10px;
+  background: #0a0908;
+  border: 1px solid #000;
+  overflow: hidden;
+}
+
+.power-fill {
+  height: 100%;
+  transition: width 120ms linear;
+}
+
+.power-fill.is-good {
+  background: linear-gradient(180deg, #52e057 0%, #1d6b21 100%);
+}
+.power-fill.is-warn {
+  background: linear-gradient(180deg, #f6c85a 0%, #a3761a 100%);
+}
+.power-fill.is-bad {
+  background: linear-gradient(180deg, #ff5a44 0%, #8c1a14 100%);
+}
+
+.power-demand {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: #fff;
+  opacity: 0.7;
+}
+
+.power-value {
+  flex: 0 0 auto;
+  font-size: 8px;
+  color: var(--ra-text-dim);
+}
+
+html[data-lang="zh"] .power-value {
+  font-size: 11px;
+}
+
+.power-warning {
+  padding: 3px;
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  text-align: center;
+  color: #ffd7cf;
+  background: #7d1418;
+  border: 1px solid #0c0806;
+  animation: power-blink 1s steps(2, end) infinite;
+}
+
+html[data-lang="zh"] .power-warning {
+  font-size: 11px;
+}
+
+@keyframes power-blink {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* ── Tools & tabs ────────────────────────────────────────────────────────── */
+
+.sidebar-tools {
+  display: flex;
+  gap: 4px;
+}
+
+.tool-button,
+.sidebar-tab {
+  flex: 1 1 0;
+  padding: 6px 2px;
+  font-family: var(--font-ui);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  color: var(--ra-text);
+  background: linear-gradient(180deg, #574636 0%, #3a2e24 100%);
+  border: 2px solid #0c0806;
+  box-shadow:
+    inset 1px 1px 0 #8d7c68,
+    inset -1px -1px 0 #1a140f;
+}
+
+html[data-lang="zh"] .tool-button,
+html[data-lang="zh"] .sidebar-tab {
+  font-size: 12px;
+}
+
+.tool-button:hover,
+.sidebar-tab:hover {
+  background: linear-gradient(180deg, #6b5744 0%, #48392c 100%);
+}
+
+.tool-button.is-active,
+.sidebar-tab.is-active {
+  background: linear-gradient(180deg, #c0242a 0%, #7d1418 100%);
+  color: #ffe9c9;
+  box-shadow:
+    inset 1px 1px 0 #ff6a5a,
+    inset -1px -1px 0 #3d0a0c;
+}
+
+.sidebar-tabs {
+  display: flex;
+  gap: 3px;
+}
+
+/* ── Build grid ──────────────────────────────────────────────────────────── */
+
+.build-grid {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  align-content: start;
+  overflow-y: auto;
+  padding: 2px;
+  background: #100d0a;
+  border: 2px solid #0c0806;
+  box-shadow: inset 1px 1px 0 #3a2e24;
+  scrollbar-width: thin;
+  scrollbar-color: #574636 #100d0a;
+}
+
+.build-empty {
+  grid-column: 1 / -1;
+  margin: 12px 0;
+  text-align: center;
+  color: var(--ra-text-dim);
+}
+
+.build-icon {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0 0 20px;
+  background: #221c16;
+  border: 2px solid #0c0806;
+  box-shadow:
+    inset 1px 1px 0 #6b5744,
+    inset -1px -1px 0 #0c0806;
+  overflow: hidden;
+}
+
+.build-icon:hover:not(:disabled) {
+  box-shadow:
+    inset 1px 1px 0 #a3907a,
+    inset -1px -1px 0 #0c0806,
+    0 0 0 1px #8d7c68;
+}
+
+.build-icon-art {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.build-icon.is-locked {
+  filter: grayscale(1) brightness(0.45);
+  cursor: not-allowed;
+}
+
+.build-icon.is-poor .build-icon-cost {
+  color: #ff6a5a;
+}
+
+.build-icon-clock {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 20px;
+  pointer-events: none;
+}
+
+.build-icon-flash {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  transform: translateY(-60%);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-align: center;
+  color: #0b0a08;
+  background: rgba(83, 224, 87, 0.92);
+  padding: 2px 0;
+  animation: ready-blink 0.8s steps(2, end) infinite;
+  pointer-events: none;
+}
+
+html[data-lang="zh"] .build-icon-flash {
+  font-size: 12px;
+}
+
+@keyframes ready-blink {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.build-icon-count {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 14px;
+  padding: 1px 3px;
+  font-size: 9px;
+  text-align: center;
+  color: #ffe9c9;
+  background: #7d1418;
+  border: 1px solid #0c0806;
+}
+
+.build-icon-name {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  padding: 0 2px;
+  font-size: 7px;
+  letter-spacing: 0.02em;
+  text-align: center;
+  color: var(--ra-text);
+  background: rgba(6, 6, 10, 0.82);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.build-icon-cost {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  font-size: 8px;
+  text-align: center;
+  color: var(--ra-amber);
+  background: rgba(6, 6, 10, 0.9);
+}
+
+/* Chinese glyphs are square and tall, so they need a smaller size than Latin to fit the cameo. */
+html[data-lang="zh"] .build-icon-name {
+  font-size: 9px;
+  letter-spacing: 0;
+}
+
+html[data-lang="zh"] .build-icon-cost {
+  font-size: 9px;
+}
+
+/* ── Readouts & EVA ──────────────────────────────────────────────────────── */
+
+.sidebar-readouts {
+  min-height: 26px;
+  padding: 3px 5px;
+  background: #14100c;
+  border: 2px solid #0c0806;
+}
+
+.hover-info,
+.selection-info {
+  margin: 1px 0;
+  font-size: 8px;
+  color: var(--ra-text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+html[data-lang="zh"] .hover-info,
+html[data-lang="zh"] .selection-info {
+  font-size: 11px;
+}
+
+.eva-log {
+  height: 78px;
+  margin: 0;
+  padding: 4px 6px;
+  overflow: hidden;
+  list-style: none;
+  background: #0b0e0a;
+  border: 2px solid #0c0806;
+  box-shadow: inset 1px 1px 0 #2a3325;
+}
+
+.eva-log li {
+  font-size: 8px;
+  line-height: 1.55;
+  color: var(--ra-green);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.eva-log li:last-child {
+  color: #8affa0;
+}
+
+html[data-lang="zh"] .eva-log li {
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.sidebar-exit {
+  padding: 9px;
+  font-family: var(--font-ui);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: #ffe9c9;
+  background: linear-gradient(180deg, #c0242a 0%, #7d1418 100%);
+  border: 2px solid #0c0806;
+  box-shadow:
+    inset 1px 1px 0 #ff6a5a,
+    inset -1px -1px 0 #3d0a0c;
+}
+
+html[data-lang="zh"] .sidebar-exit {
+  font-size: 13px;
+}
+
+/* ── Superweapon panel ───────────────────────────────────────────────────── */
+
+.superweapon {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 7px;
+  font-family: var(--font-ui);
+  color: var(--ra-text-dim);
+  background: #14100c;
+  border: 2px solid #0c0806;
+  box-shadow: inset 1px 1px 0 #3a2e24;
+  cursor: default;
+}
+
+.superweapon-label {
+  flex: 0 0 auto;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+html[data-lang="zh"] .superweapon-label {
+  font-size: 11px;
+}
+
+.superweapon-bar {
+  flex: 1 1 auto;
+  height: 8px;
+  background: #0a0908;
+  border: 1px solid #000;
+  overflow: hidden;
+}
+
+.superweapon-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(180deg, #f6c85a 0%, #a3761a 100%);
+  transition: width 200ms linear;
+}
+
+.superweapon-time {
+  flex: 0 0 auto;
+  font-size: 8px;
+  color: var(--ra-amber);
+}
+
+html[data-lang="zh"] .superweapon-time {
+  font-size: 11px;
+}
+
+.superweapon.is-ready {
+  cursor: pointer;
+  color: #ffe9c9;
+  background: linear-gradient(180deg, #7d1418 0%, #4a0d0a 100%);
+  animation: nuke-ready 1.1s steps(2, end) infinite;
+}
+
+.superweapon.is-ready .superweapon-fill {
+  background: linear-gradient(180deg, #ff6a5a 0%, #c0242a 100%);
+}
+
+.superweapon.is-targeting {
+  animation: none;
+  box-shadow:
+    inset 1px 1px 0 #ff6a5a,
+    0 0 0 2px #ff5a44;
+}
+
+@keyframes nuke-ready {
+  50% {
+    filter: brightness(1.45);
+  }
+}
