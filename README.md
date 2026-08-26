@@ -9,7 +9,20 @@
   </a>
 </p>
 
-Welcome to your Remotion project!
+Welcome to your Remotion project.
+
+## 九世善珠 · 《守爱》
+
+一分钟品宣合成 `JiushiShanzhu`，叙事闭环：
+
+**Logo → 一群人 → 更多人 → 回归 Logo**
+
+完整讲稿见 [`docs/jiushi-shanzhu-animation-script.md`](docs/jiushi-shanzhu-animation-script.md)。
+
+```console
+npm run dev
+npm run render:shanzhu
+```
 
 ## Commands
 
