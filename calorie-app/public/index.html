@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>食刻 · 拍照测热量</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥗</text></svg>" />
+  <style>
+    :root {
+      --brand: #ff7a45;
+      --brand-dark: #e8590c;
+      --bg: #f7f5f2;
+      --card: #ffffff;
+      --text: #2d2a26;
+      --muted: #8b8680;
+      --green: #37b24d;
+      --radius: 16px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      max-width: 480px;
+      margin: 0 auto;
+      padding-bottom: 40px;
+    }
+    header {
+      padding: 20px 20px 8px;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+    header h1 { font-size: 22px; }
+    header span { font-size: 13px; color: var(--muted); }
+
+    .section { padding: 12px 16px; }
+
+    /* 拍照区 */
+    .shoot-card {
+      background: linear-gradient(135deg, #fff3ea, #ffe8d9);
+      border: 1px dashed #ffb98a;
+      border-radius: var(--radius);
+      padding: 28px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+    .shoot-card:active { transform: scale(0.98); }
+    .shoot-card .icon { font-size: 44px; }
+    .shoot-card p { margin-top: 8px; font-size: 15px; font-weight: 600; }
+    .shoot-card small { color: var(--muted); font-size: 12px; }
+    #file-input { display: none; }
+
+    /* 预览与加载 */
+    .preview-wrap { position: relative; display: none; margin-top: 12px; }
+    .preview-wrap img {
+      width: 100%;
+      border-radius: var(--radius);
+      display: block;
+      max-height: 300px;
+      object-fit: cover;
+    }
+    .loading-mask {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.45);
+      border-radius: var(--radius);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      gap: 10px;
+      font-size: 14px;
+    }
+    .spinner {
+      width: 34px; height: 34px;
+      border: 3px solid rgba(255,255,255,0.35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-box {
+      display: none;
+      margin-top: 12px;
+      background: #fff0f0;
+      color: #c92a2a;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 14px;
+    }
+
+    /* 结果区 */
+    #result { display: none; }
+    .total-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .total-card .meal-name { font-size: 15px; color: var(--muted); }
+    .total-card .kcal {
+      font-size: 44px;
+      font-weight: 800;
+      color: var(--brand-dark);
+      line-height: 1.2;
+    }
+    .total-card .kcal small { font-size: 15px; font-weight: 500; color: var(--muted); }
+    .macros {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid #f0ede9;
+    }
+    .macros div { font-size: 12px; color: var(--muted); }
+    .macros b { display: block; font-size: 17px; color: var(--text); }
+
+    .item-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-top: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    }
+    .item-card .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .item-card .name { font-weight: 600; font-size: 15px; }
+    .item-card .kcal { color: var(--brand-dark); font-weight: 700; }
+    .item-card .meta { margin-top: 4px; font-size: 12px; color: var(--muted); }
+    .conf { font-size: 11px; padding: 1px 7px; border-radius: 999px; margin-left: 6px; vertical-align: 1px; }
+    .conf.high { background: #e6f8ec; color: var(--green); }
+    .conf.medium { background: #fff4e0; color: #e8890c; }
+    .conf.low { background: #ffecec; color: #d64545; }
+
+    .tip-card {
+      margin-top: 10px;
+      background: #eefaf1;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: #2b7a3d;
+      line-height: 1.6;
+    }
+
+    /* 历史 */
+    .history-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 18px 0 4px;
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .history-title button {
+      border: none;
+      background: none;
+      color: var(--muted);
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .history-item {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 10px 14px;
+      margin-top: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+    }
+    .history-item .time { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .history-item .kcal { color: var(--brand-dark); font-weight: 700; }
+    .history-empty { color: var(--muted); font-size: 13px; text-align: center; padding: 16px 0; }
+
+    .today-bar {
+      margin-top: 10px;
+      background: var(--card);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+    }
+    .today-bar b { color: var(--brand-dark); font-size: 16px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🥗 食刻</h1>
+    <span>拍照片，测热量</span>
+  </header>
+
+  <div class="section">
+    <div class="shoot-card" id="shoot-btn">
+      <div class="icon">📸</div>
+      <p>拍一张食物照片</p>
+      <small>或从相册选择 · AI 自动识别热量与营养</small>
+    </div>
+    <input type="file" id="file-input" accept="image/*" capture="environment" />
+
+    <div class="preview-wrap" id="preview-wrap">
+      <img id="preview-img" alt="食物照片预览" />
+      <div class="loading-mask" id="loading-mask">
+        <div class="spinner"></div>
+        <div>AI 营养师正在分析…</div>
+      </div>
+    </div>
+
+    <div class="error-box" id="error-box"></div>
+
+    <div id="result">
+      <div class="section" style="padding:12px 0 0;">
+        <div class="total-card">
+          <div class="meal-name" id="r-meal-name"></div>
+          <div class="kcal"><span id="r-total"></span><small> 千卡</small></div>
+          <div class="macros">
+            <div>蛋白质<b id="r-protein"></b></div>
+            <div>脂肪<b id="r-fat"></b></div>
+            <div>碳水<b id="r-carbs"></b></div>
+          </div>
+        </div>
+        <div id="r-items"></div>
+        <div class="tip-card" id="r-tip"></div>
+      </div>
+    </div>
+
+    <div class="today-bar" id="today-bar" style="display:none;">
+      <span>今日已记录</span>
+      <span><b id="today-kcal">0</b> 千卡</span>
+    </div>
+
+    <div class="history-title">
+      <span>历史记录</span>
+      <button id="clear-history">清空</button>
+    </div>
+    <div id="history-list"></div>
+  </div>
+
+  <script>
+    const HISTORY_KEY = "calorie_history_v1";
+    const fileInput = document.getElementById("file-input");
+    const shootBtn = document.getElementById("shoot-btn");
+    const previewWrap = document.getElementById("preview-wrap");
+    const previewImg = document.getElementById("preview-img");
+    const loadingMask = document.getElementById("loading-mask");
+    const errorBox = document.getElementById("error-box");
+    const resultEl = document.getElementById("result");
+
+    shootBtn.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files && fileInput.files[0];
+      if (file) analyzeFile(file);
+      fileInput.value = "";
+    });
+
+    async function analyzeFile(file) {
+      hideError();
+      resultEl.style.display = "none";
+      const dataUrl = await compressImage(file, 1024, 0.85);
+      previewImg.src = dataUrl;
+      previewWrap.style.display = "block";
+      loadingMask.style.display = "flex";
+      try {
+        const base64 = dataUrl.split(",")[1];
+        const res = await fetch("/api/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: base64, media_type: "image/jpeg" }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "分析失败，请重试");
+        if (!data.is_food || !data.items.length) {
+          throw new Error("没有在照片里认出食物，换个角度再拍一张试试？");
+        }
+        renderResult(data);
+        saveHistory(data);
+      } catch (err) {
+        showError(err.message || "网络错误，请重试");
+      } finally {
+        loadingMask.style.display = "none";
+      }
+    }
+
+    function compressImage(file, maxSize, quality) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
+          canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL("image/jpeg", quality));
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("无法读取图片")); };
+        img.src = url;
+      });
+    }
+
+    const CONF_TEXT = { high: "较准", medium: "估算", low: "不确定" };
+
+    function renderResult(data) {
+      document.getElementById("r-meal-name").textContent = data.meal_name;
+      document.getElementById("r-total").textContent = Math.round(data.total_calories_kcal);
+      const sum = (key) => data.items.reduce((acc, it) => acc + (it[key] || 0), 0);
+      document.getElementById("r-protein").textContent = sum("protein_g").toFixed(1) + "g";
+      document.getElementById("r-fat").textContent = sum("fat_g").toFixed(1) + "g";
+      document.getElementById("r-carbs").textContent = sum("carbs_g").toFixed(1) + "g";
+      document.getElementById("r-items").innerHTML = data.items.map((it) => `
+        <div class="item-card">
+          <div class="row">
+            <span class="name">${escapeHtml(it.name)}<span class="conf ${it.confidence}">${CONF_TEXT[it.confidence] || "估算"}</span></span>
+            <span class="kcal">${Math.round(it.calories_kcal)} 千卡</span>
+          </div>
+          <div class="meta">${escapeHtml(it.portion)} · 蛋白 ${it.protein_g}g · 脂肪 ${it.fat_g}g · 碳水 ${it.carbs_g}g</div>
+        </div>`).join("");
+      document.getElementById("r-tip").textContent = "💡 " + data.health_tip;
+      resultEl.style.display = "block";
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    function showError(msg) { errorBox.textContent = "⚠️ " + msg; errorBox.style.display = "block"; }
+    function hideError() { errorBox.style.display = "none"; }
+
+    // ---------- 历史记录（保存在本机浏览器） ----------
+    function loadHistory() {
+      try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; }
+      catch { return []; }
+    }
+    function saveHistory(data) {
+      const list = loadHistory();
+      list.unshift({
+        time: Date.now(),
+        meal_name: data.meal_name,
+        kcal: Math.round(data.total_calories_kcal),
+      });
+      try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, 50))); } catch {}
+      renderHistory();
+    }
+    function renderHistory() {
+      const list = loadHistory();
+      const container = document.getElementById("history-list");
+      const todayBar = document.getElementById("today-bar");
+      if (!list.length) {
+        container.innerHTML = '<div class="history-empty">还没有记录，拍下你的第一餐吧～</div>';
+        todayBar.style.display = "none";
+        return;
+      }
+      const todayStart = new Date().setHours(0, 0, 0, 0);
+      const todayKcal = list.filter((it) => it.time >= todayStart).reduce((acc, it) => acc + it.kcal, 0);
+      todayBar.style.display = "flex";
+      document.getElementById("today-kcal").textContent = todayKcal;
+      container.innerHTML = list.map((it) => `
+        <div class="history-item">
+          <div>
+            <div>${escapeHtml(it.meal_name)}</div>
+            <div class="time">${formatTime(it.time)}</div>
+          </div>
+          <span class="kcal">${it.kcal} 千卡</span>
+        </div>`).join("");
+    }
+    function formatTime(ts) {
+      const d = new Date(ts);
+      const pad = (n) => String(n).padStart(2, "0");
+      return `${d.getMonth() + 1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+    document.getElementById("clear-history").addEventListener("click", () => {
+      if (confirm("确定清空所有历史记录吗？")) {
+        localStorage.removeItem(HISTORY_KEY);
+        renderHistory();
+      }
+    });
+    renderHistory();
+  </script>
+</body>
+</html>

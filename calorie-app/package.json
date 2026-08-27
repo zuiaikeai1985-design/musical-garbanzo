@@ -1,0 +1,15 @@
+{
+  "name": "calorie-app",
+  "version": "1.0.0",
+  "description": "拍照识别食物并估算热量的小应用",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node server.mjs",
+    "mock": "MOCK=1 node server.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.74.0",
+    "zod": "^3.25.0"
+  }
+}
